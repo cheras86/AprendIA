@@ -57,19 +57,28 @@ function estiloParaIndice(i) { return ESTILOS_LISTA[i % ESTILOS_LISTA.length]; }
 // =========================================================================
 //  INIT
 // =========================================================================
-document.addEventListener("DOMContentLoaded", () => {
+// Ejecutar init cuando el DOM esté listo — compatible con defer y file://
+function initApp() {
     registrarServiceWorker();
     configurarInstalacionPWA();
-
-    // Listeners con null-check (el HTML puede no tener todos los elementos)
-    const addL = (id, ev, fn) => { const el = document.getElementById(id); if (el) el.addEventListener(ev, fn); };
-    addL('form-login',  'submit', handleLogin);
-    addL('form-config', 'submit', handleConfig);
-    addL('form-apis',   'submit', handleGuardarAPIs);
-
-    // Verificar sesión guardada DESPUÉS de registrar los listeners
     verificarSesionGuardada();
-});
+
+    // Toggle sección avatar según modo vídeo
+    document.addEventListener('change', function(e) {
+        if (e.target.name === 'video-modo') {
+            const sec = document.getElementById('avatar-upload-section');
+            if (sec) sec.style.display = e.target.value === 'avatar' ? 'block' : 'none';
+        }
+    });
+}
+
+// Doble seguro: DOMContentLoaded + window.onload como fallback
+if (document.readyState === 'loading') {
+    document.addEventListener('DOMContentLoaded', initApp);
+} else {
+    // DOM ya cargado (scripts sin defer, o cargado tarde)
+    initApp();
+}
 
 function registrarServiceWorker() {
     // Solo registrar SW en http/https, no en file:// (doble clic)
@@ -133,10 +142,19 @@ function verificarSesionGuardada() {
     } catch(_) { localStorage.removeItem("aprendia_session"); }
 }
 function handleLogin(e) {
-    e.preventDefault();
-    const email = document.getElementById('login-email').value.trim();
-    const pass  = document.getElementById('login-password').value.trim();
-    const gkey  = document.getElementById('login-key').value.trim();
+    if (e && e.preventDefault) e.preventDefault();
+    const emailEl = document.getElementById('login-email');
+    const passEl  = document.getElementById('login-password');
+    const keyEl   = document.getElementById('login-key');
+    if (!emailEl || !passEl || !keyEl) {
+        console.error('[Login] Elementos del formulario no encontrados');
+        mostrarToast('Error interno. Recarga la página.','error');
+        return;
+    }
+    const email = emailEl.value.trim();
+    const pass  = passEl.value.trim();
+    const gkey  = keyEl.value.trim();
+    console.log('[Login] Intentando con email:', email, '| key:', gkey ? 'presente' : 'vacía');
     if (!email || !pass || !gkey) { mostrarToast('Completa todos los campos.','error'); return; }
 
     usuarioActivo       = email;
@@ -162,12 +180,17 @@ function guardarSesion() {
     }));
 }
 function arrancarInterfazLogueada() {
+    console.log('[App] Arrancando interfaz para:', usuarioActivo);
     const emailEl = document.getElementById('txt-user-email');
     if (emailEl) emailEl.innerText = usuarioActivo;
     const navbar = document.getElementById('global-navbar');
-    if (navbar) navbar.style.display = 'flex';
-    actualizarIndicadoresAPIs();
-    revisarTokenOAuthEnURL();
+    if (navbar) {
+        navbar.style.display = 'flex';
+    } else {
+        console.error('[App] Navbar no encontrado en DOM');
+    }
+    try { actualizarIndicadoresAPIs(); } catch(e) { console.warn('APIs dots:', e); }
+    try { revisarTokenOAuthEnURL(); } catch(e) {}
     mostrarPantallaCarpetas();
 }
 function ejecutarCierreSesion() {
@@ -2184,3 +2207,60 @@ function descargarInformeCorreccion(resultados) {
     document.body.appendChild(a); a.click();
     document.body.removeChild(a); URL.revokeObjectURL(url);
 }
+
+// ── Exponer funciones globales para onsubmit/onclick en HTML ──
+window.handleLogin          = handleLogin;
+window.handleConfig         = handleConfig;
+window.handleGuardarAPIs    = handleGuardarAPIs;
+window.mostrarPantallaCarpetas = mostrarPantallaCarpetas;
+window.mostrarPantallaAPIs  = mostrarPantallaAPIs;
+window.cambiarPantalla      = cambiarPantalla;
+window.ejecutarCierreSesion = ejecutarCierreSesion;
+window.instalarPWA          = instalarPWA;
+window.navegarDiapositivas  = navegarDiapositivas;
+window.cambiarTipoDiapo     = cambiarTipoDiapo;
+window.navegarApartado      = navegarApartado;
+window.guardarApartadosSiguiente = guardarApartadosSiguiente;
+window.agregarApartado      = agregarApartado;
+window.eliminarApartado     = eliminarApartado;
+window.agregarSubapartado   = agregarSubapartado;
+window.eliminarSubapartado  = eliminarSubapartado;
+window.cambiarEstilo        = cambiarEstilo;
+window.ejecutarMagicIA      = ejecutarMagicIA;
+window.ejecutarBusquedaManualImagenes = ejecutarBusquedaManualImagenes;
+window.actualizarTextoDesdeEditor = actualizarTextoDesdeEditor;
+window.actualizarGuionDesdeEditor = actualizarGuionDesdeEditor;
+window.exportarClaseAPowerPoint   = exportarClaseAPowerPoint;
+window.exportarExamenWord         = exportarExamenWord;
+window.abrirModalVideo    = abrirModalVideo;
+window.abrirModalGuion    = abrirModalGuion;
+window.abrirModalForms    = abrirModalForms;
+window.cerrarModal        = cerrarModal;
+window.seleccionarVoz     = seleccionarVoz;
+window.generarVideoNarrado = generarVideoNarrado;
+window.reproducirFragmento = reproducirFragmento;
+window.descargarGuion     = descargarGuion;
+window.generarFormsTexto  = generarFormsTexto;
+window.copiarFormsTexto   = copiarFormsTexto;
+window.descargarFormsTxt  = descargarFormsTxt;
+window.corregirRespuestasSheet = corregirRespuestasSheet;
+window.guardarEnCarpeta   = guardarEnCarpeta;
+window.subirImagenPropia  = subirImagenPropia;
+window.cambiarFitImagen   = cambiarFitImagen;
+window.cambiarPosImagen   = cambiarPosImagen;
+window.ajustarImagen      = ajustarImagen;
+window.cargarAvatarImagen = cargarAvatarImagen;
+window.eliminarCarpeta    = eliminarCarpeta;
+window.verArchivosDeCarpeta = verArchivosDeCarpeta;
+window.cargarWorkspaceDesdeCarpeta = cargarWorkspaceDesdeCarpeta;
+window.descargarPPTXDesdeCarpeta   = descargarPPTXDesdeCarpeta;
+window.descargarExamenDesdeCarpeta = descargarExamenDesdeCarpeta;
+window.verGuionDesdeCarpeta        = verGuionDesdeCarpeta;
+window.abrirVideoDesdeCarpeeta     = abrirVideoDesdeCarpeeta;
+window.abrirFormsDesdeCarpeeta     = abrirFormsDesdeCarpeeta;
+window.subirPPTXADrive             = subirPPTXADrive;
+window.handleDragOver  = handleDragOver;
+window.handleDragLeave = handleDragLeave;
+window.handleDrop      = handleDrop;
+window.agregarArchivos = agregarArchivos;
+window.eliminarArchivo = eliminarArchivo;
