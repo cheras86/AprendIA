@@ -692,34 +692,74 @@ select option{background:var(--s2);}
 <!-- Video narrado -->
 <div id="modal-video" class="modal-bg" style="display:none">
  <div class="modal">
-  <div class="modal-title">🎬 Narración por IA</div>
-  <p class="modal-sub">Audio generado para cada diapositiva mediante síntesis de voz del navegador.</p>
+  <div class="modal-title">🎬 Generar Vídeo Narrado</div>
+  <p class="modal-sub">Crea un vídeo MP4 descargable con las diapositivas y narración de IA. Opcionalmente añade tu foto como avatar.</p>
+
+  <!-- Modo -->
   <div class="modal-sec">
-   <div class="modal-sec-lbl">Voz</div>
-   <div class="voice-grid">
-    <button type="button" class="voice-btn on" id="voz-Kore"   onclick="seleccionarVoz('Kore')">🎙 Kore<small>Neutral</small></button>
-    <button type="button" class="voice-btn"   id="voz-Puck"   onclick="seleccionarVoz('Puck')">🎙 Puck<small>Amigable</small></button>
-    <button type="button" class="voice-btn"   id="voz-Charon" onclick="seleccionarVoz('Charon')">🎙 Charon<small>Serio</small></button>
-    <button type="button" class="voice-btn"   id="voz-Fenrir" onclick="seleccionarVoz('Fenrir')">🎙 Fenrir<small>Grave</small></button>
-    <button type="button" class="voice-btn"   id="voz-Aoede"  onclick="seleccionarVoz('Aoede')">🎙 Aoede<small>Cálida</small></button>
-    <button type="button" class="voice-btn"   id="voz-Leda"   onclick="seleccionarVoz('Leda')">🎙 Leda<small>Clara</small></button>
+   <div class="modal-sec-lbl">Modo de vídeo</div>
+   <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px">
+    <label style="display:flex;align-items:center;gap:8px;padding:10px;background:var(--s2);border:1px solid var(--rim);border-radius:var(--rsm);cursor:pointer;font-size:.82rem">
+     <input type="radio" name="video-modo" value="diapositivas" checked style="accent-color:var(--v);width:auto;padding:0;background:transparent;border:none">
+     <span>🖥 Solo diapositivas + audio</span>
+    </label>
+    <label style="display:flex;align-items:center;gap:8px;padding:10px;background:var(--s2);border:1px solid var(--rim);border-radius:var(--rsm);cursor:pointer;font-size:.82rem">
+     <input type="radio" name="video-modo" value="avatar" style="accent-color:var(--v);width:auto;padding:0;background:transparent;border:none">
+     <span>🧑 Diapositivas + Avatar</span>
+    </label>
    </div>
   </div>
+
+  <!-- Avatar upload -->
+  <div class="modal-sec" id="avatar-upload-section" style="display:none">
+   <div class="modal-sec-lbl">Tu foto de avatar</div>
+   <div style="display:flex;align-items:center;gap:14px">
+    <img id="avatar-preview" src="" alt="Avatar" style="display:none;width:64px;height:64px;border-radius:50%;object-fit:cover;border:2px solid var(--v)">
+    <label style="display:inline-flex;align-items:center;gap:7px;padding:9px 16px;background:var(--vd);color:var(--v2);border:1px solid rgba(124,92,252,.3);border-radius:var(--rsm);cursor:pointer;font-size:.8rem;font-weight:600">
+     📁 Subir foto
+     <input type="file" accept="image/*" style="display:none" onchange="cargarAvatarImagen(this)">
+    </label>
+    <span style="font-size:.74rem;color:var(--fog)">Tu foto aparecerá en la esquina inferior derecha del vídeo</span>
+   </div>
+  </div>
+
+  <!-- Voz -->
+  <div class="modal-sec">
+   <div class="modal-sec-lbl">Voz del narrador</div>
+   <div class="voice-grid">
+    <button type="button" class="voice-btn on" id="voz-Kore"   onclick="seleccionarVoz('Kore')">🎙 Kore<small>Neutral</small></button>
+    <button type="button" class="voice-btn"    id="voz-Puck"   onclick="seleccionarVoz('Puck')">🎙 Puck<small>Amigable</small></button>
+    <button type="button" class="voice-btn"    id="voz-Charon" onclick="seleccionarVoz('Charon')">🎙 Charon<small>Serio</small></button>
+    <button type="button" class="voice-btn"    id="voz-Fenrir" onclick="seleccionarVoz('Fenrir')">🎙 Fenrir<small>Grave</small></button>
+    <button type="button" class="voice-btn"    id="voz-Aoede"  onclick="seleccionarVoz('Aoede')">🎙 Aoede<small>Cálida</small></button>
+    <button type="button" class="voice-btn"    id="voz-Leda"   onclick="seleccionarVoz('Leda')">🎙 Leda<small>Clara</small></button>
+   </div>
+  </div>
+
+  <!-- Detalle -->
   <div class="modal-sec">
    <div class="modal-sec-lbl">Nivel de detalle</div>
    <select id="video-detalle">
-    <option value="conciso">Conciso (≈45 seg/diapositiva)</option>
-    <option value="detallado" selected>Detallado (≈90 seg)</option>
-    <option value="exhaustivo">Exhaustivo (≈2 min)</option>
+    <option value="conciso">Conciso — resumen breve (≈45 seg/diapositiva)</option>
+    <option value="detallado" selected>Detallado — explicación completa (≈90 seg)</option>
+    <option value="exhaustivo">Exhaustivo — con ejemplos y ampliaciones (≈2 min)</option>
    </select>
   </div>
-  <div id="audio-resultado-wrap" style="display:none">
-   <div class="modal-sec-lbl">Audios generados</div>
+
+  <!-- Aviso técnico -->
+  <div style="background:rgba(255,184,0,.06);border:1px solid rgba(255,184,0,.18);border-radius:var(--rsm);padding:10px 13px;font-size:.75rem;color:var(--am);margin-bottom:4px">
+   ⚠️ El vídeo se genera en tu navegador. El proceso puede tardar varios minutos según el número de diapositivas. No cierres la ventana mientras se genera.
+  </div>
+
+  <!-- Audios individuales -->
+  <div id="audio-resultado-wrap" style="display:none;margin-top:12px">
+   <div class="modal-sec-lbl">Escuchar diapositivas individualmente</div>
    <div id="audio-list-container" class="audio-list"></div>
   </div>
+
   <div class="modal-btns">
-   <button type="button" class="btn btn-g" style="flex:.35" onclick="cerrarModal('modal-video')">Cancelar</button>
-   <button type="button" id="btn-generar-video" class="btn btn-v" onclick="generarVideoNarrado()">🎬 Generar</button>
+   <button type="button" class="btn btn-g" style="flex:.3" onclick="cerrarModal('modal-video')">Cancelar</button>
+   <button type="button" id="btn-generar-video" class="btn btn-v" onclick="generarVideoNarrado()">🎬 Generar y Descargar Vídeo</button>
   </div>
  </div>
 </div>
@@ -1101,6 +1141,16 @@ select option{background:var(--s2);}
  </div><!-- /card -->
 </div><!-- /app -->
 
+
+<script>
+// Mostrar/ocultar sección avatar según modo seleccionado
+document.addEventListener('change', function(e) {
+    if (e.target.name === 'video-modo') {
+        const sec = document.getElementById('avatar-upload-section');
+        if (sec) sec.style.display = e.target.value === 'avatar' ? 'block' : 'none';
+    }
+});
+</script>
 <script src="app.js"></script>
 </body>
 </html>
