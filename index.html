@@ -857,7 +857,7 @@ select option{background:var(--s2);}
      <p class="t-sub">Suite educativa con IA para profesores.<br>Genera material completo en minutos.</p>
      <div class="info-pill">🔑 Necesitas una <strong>API Key gratuita de OpenRouter</strong>. Consíguela en <a href="https://openrouter.ai/keys" target="_blank">openrouter.ai/keys</a>. Sin tarjeta de crédito.</div>
      <div class="info-pill em">✅ Tu sesión se guarda automáticamente. Solo introduces los datos una vez.</div>
-     <form id="form-login">
+     <form id="form-login" onsubmit="handleLogin(event)">
       <div class="field"><label class="t-label">Correo electrónico</label><input type="email" id="login-email" required placeholder="profesor@colegio.edu" autocomplete="email"></div>
       <div class="field"><label class="t-label">Contraseña local</label><input type="password" id="login-password" required placeholder="••••••••" autocomplete="current-password"></div>
       <div class="field"><label class="t-label">OpenRouter API Key</label><input type="password" id="login-key" required placeholder="sk-or-v1-..." autocomplete="off"></div>
@@ -897,7 +897,7 @@ select option{background:var(--s2);}
    <div class="card-body">
     <div class="t-display" style="font-size:1.4rem">⚙️ Servicios Opcionales</div>
     <p class="t-sub">La IA ya funciona sin estas integraciones. Son mejoras opcionales.</p>
-    <form id="form-apis">
+    <form id="form-apis" onsubmit="handleGuardarAPIs(event)">
      <div class="apis-grid">
       <div class="api-card">
        <div class="api-card-top"><span class="api-ico">📷</span><span class="api-name">Unsplash</span><span class="api-st off" id="status-unsplash">Inactiva</span></div>
@@ -930,7 +930,7 @@ select option{background:var(--s2);}
     <div class="t-display" style="font-size:1.4rem">Nueva Unidad Didáctica</div>
     <p class="t-sub" style="margin-bottom:20px">Configura los parámetros y adjunta documentos de referencia.</p>
     <div class="cfg-layout">
-     <form id="form-config">
+     <form id="form-config" onsubmit="handleConfig(event)">
       <div class="field"><label class="t-label">Tema central</label><input type="text" id="cfg-tema" required placeholder="Ej: Mecánica de Fluidos, Revolución Industrial..."></div>
       <div class="field"><label class="t-label">Nivel educativo</label>
        <select id="cfg-nivel" required>
@@ -1142,15 +1142,6 @@ select option{background:var(--s2);}
 </div><!-- /app -->
 
 
-<script>
-// Mostrar/ocultar sección avatar según modo seleccionado
-document.addEventListener('change', function(e) {
-    if (e.target.name === 'video-modo') {
-        const sec = document.getElementById('avatar-upload-section');
-        if (sec) sec.style.display = e.target.value === 'avatar' ? 'block' : 'none';
-    }
-});
-</script>
 <script src="app.js"></script>
 </body>
 </html>
