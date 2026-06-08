@@ -334,13 +334,16 @@ async function llamarGemini(prompt, usarDocs = false) {
     // openrouter/auto selecciona automáticamente el mejor modelo gratuito disponible
     let r;
     try {
+        // Detectar URL real para el Referer (funciona tanto en local como en GitHub Pages)
+        const siteUrl = location.origin || 'https://aprendia.app';
         r = await fetch('https://openrouter.ai/api/v1/chat/completions', {
             method: 'POST',
             headers: {
                 'Content-Type': 'application/json',
                 'Authorization': `Bearer ${apiKeys.gemini}`,
-                'HTTP-Referer': 'https://aprendia.app',
-                'X-Title': 'AprendIA'
+                'HTTP-Referer': siteUrl,
+                'X-Title': 'AprendIA',
+                'Origin': siteUrl
             },
             body: JSON.stringify({
                 model: 'openrouter/auto',
@@ -409,13 +412,15 @@ async function llamarGemini(prompt, usarDocs = false) {
 // =========================================================================
 async function testearAPIKey(key) {
     try {
+        const siteUrl2 = location.origin || 'https://aprendia.app';
         const r = await fetch('https://openrouter.ai/api/v1/chat/completions', {
             method: 'POST',
             headers: {
                 'Content-Type': 'application/json',
                 'Authorization': `Bearer ${key}`,
-                'HTTP-Referer': 'https://aprendia.app',
-                'X-Title': 'AprendIA'
+                'HTTP-Referer': siteUrl2,
+                'X-Title': 'AprendIA',
+                'Origin': siteUrl2
             },
             body: JSON.stringify({
                 model: 'openrouter/auto',
@@ -1062,114 +1067,425 @@ function guardarEnCarpeta(notificar) {
 function guardarTodoEnCarpetaHistorial(n){ guardarEnCarpeta(n); }
 
 // =========================================================================
-//  MODAL — VÍDEO NARRADO
+//  VÍDEO NARRADO — Canvas + MediaRecorder + Web Speech API
+//  Genera MP4/WebM descargable con diapositivas + audio narrado
+//  Opción: avatar (foto del usuario) hablando en esquina
 // =========================================================================
+
+let avatarDataURL = null; // foto del usuario como avatar
+
 function abrirModalVideo() {
-    document.getElementById('audio-resultado-wrap').style.display='none';
-    document.getElementById('audio-list-container').innerHTML='';
-    document.getElementById('modal-video').style.display='flex';
+    document.getElementById('audio-resultado-wrap').style.display = 'none';
+    document.getElementById('audio-list-container').innerHTML = '';
+    // Restaurar botón
+    const btn = document.getElementById('btn-generar-video');
+    if (btn) { btn.disabled = false; btn.textContent = '🎬 Generar Vídeo'; }
+    document.getElementById('modal-video').style.display = 'flex';
 }
-function cerrarModal(id) { document.getElementById(id).style.display='none'; }
+
+function cerrarModal(id) {
+    document.getElementById(id).style.display = 'none';
+}
+
 function seleccionarVoz(v) {
-    vozSeleccionada=v;
-    document.querySelectorAll('.voice-btn').forEach(b=>b.classList.remove('selected'));
-    document.getElementById('voz-'+v).classList.add('selected');
+    vozSeleccionada = v;
+    document.querySelectorAll('.voice-btn').forEach(b => b.classList.remove('on'));
+    const el = document.getElementById('voz-' + v);
+    if (el) el.classList.add('on');
+}
+
+function cargarAvatarImagen(input) {
+    const file = input.files[0];
+    if (!file) return;
+    const reader = new FileReader();
+    reader.onload = e => {
+        avatarDataURL = e.target.result;
+        const prev = document.getElementById('avatar-preview');
+        if (prev) {
+            prev.src = avatarDataURL;
+            prev.style.display = 'block';
+        }
+        mostrarToast('✅ Avatar cargado.');
+    };
+    reader.readAsDataURL(file);
+    input.value = '';
 }
 
 async function generarVideoNarrado() {
-    const detalle = document.getElementById('video-detalle').value;
-    const btn     = document.getElementById('btn-generar-video');
-    btn.disabled  = true;
+    const detalle   = document.getElementById('video-detalle').value;
+    const modoSeleccionado = document.querySelector('input[name="video-modo"]:checked')?.value || 'diapositivas';
+    const conAvatar = modoSeleccionado === 'avatar' && avatarDataURL;
+    const btn       = document.getElementById('btn-generar-video');
+    btn.disabled    = true;
     btn.textContent = '⏳ Generando guiones...';
+    mostrarToast('🎬 Generando narración con IA...');
 
-    mostrarToast('🎬 Generando guiones de narración con Gemini...');
-
-    // 1. Generar guiones de narración para cada diapositiva via Gemini
-    const guionesNarracion = {};
+    // 1. Generar guiones
     const instrDetalle = {
         conciso:    "Resume en 3-4 frases el contenido de esta diapositiva para narrarla en voz.",
-        detallado:  "Explica en 6-8 frases el contenido de esta diapositiva con contexto y ejemplos para narrarla en voz.",
-        exhaustivo: "Desarrolla en 10-14 frases el contenido de esta diapositiva con ejemplos, analogías y ampliaciones para una narración educativa completa."
+        detallado:  "Explica en 6-8 frases el contenido de esta diapositiva con contexto para narrarla.",
+        exhaustivo: "Desarrolla en 10-12 frases con ejemplos y analogías para una narración completa."
     };
 
+    const guiones = {};
     for (const item of listaSubapartadosGlobal) {
-        const sub   = item.subapartado;
-        const bloque= contenidoDiapositivas[sub];
+        const sub    = item.subapartado;
+        const bloque = contenidoDiapositivas[sub];
         if (!bloque) continue;
-
-        const prompt = `Eres un narrador educativo experto. ${instrDetalle[detalle]}
+        const prompt = `${instrDetalle[detalle]}
 Título: "${sub}"
-Puntos clave: ${bloque.resumen.texto}
-Caso práctico: ${bloque.ejemplo.texto}
-Quiz: ${bloque.quiz.texto}
-
-Devuelve SOLO: {"narracion":"texto corrido natural para leer en voz alta, sin viñetas ni markdown"}`;
+Contenido: ${bloque.resumen.texto}
+Devuelve SOLO: {"narracion":"texto natural para leer en voz alta"}`;
         try {
             const r = await llamarGemini(prompt);
-            guionesNarracion[sub] = r.narracion || bloque.resumen.script;
+            guiones[sub] = r.narracion || bloque.resumen.script;
         } catch(_) {
-            guionesNarracion[sub] = bloque.resumen.script + " " + bloque.ejemplo.script;
+            guiones[sub] = bloque.resumen.script || sub;
         }
     }
 
-    // 2. Mostrar reproductores de audio usando Web Speech API
-    btn.textContent = '▶ Reproducir Todo';
-    btn.disabled    = false;
-    btn.onclick     = () => reproducirTodoElAudio(guionesNarracion);
+    btn.textContent = '🎬 Renderizando vídeo...';
+    mostrarToast('🎬 Renderizando diapositivas...');
 
+    // 2. Renderizar vídeo con Canvas + MediaRecorder
+    try {
+        await renderizarVideoCanvas(guiones, conAvatar);
+    } catch(err) {
+        mostrarToast('❌ Error: ' + err.message, 'error');
+        btn.disabled   = false;
+        btn.textContent = '🎬 Generar Vídeo';
+    }
+}
+
+async function renderizarVideoCanvas(guiones, conAvatar) {
+    // Configuración canvas 16:9
+    const W = 1280, H = 720;
+    const canvas  = document.createElement('canvas');
+    canvas.width  = W; canvas.height = H;
+    const ctx     = canvas.getContext('2d');
+
+    // MediaRecorder para grabar canvas + audio
+    const stream        = canvas.captureStream(30);
+    const audioCtx      = new (window.AudioContext || window.webkitAudioContext)();
+    const audioDestNode = audioCtx.createMediaStreamDestination();
+    stream.addTrack(audioDestNode.stream.getAudioTracks()[0]);
+
+    const mimeType  = MediaRecorder.isTypeSupported('video/mp4') ? 'video/mp4'
+                    : MediaRecorder.isTypeSupported('video/webm;codecs=vp9') ? 'video/webm;codecs=vp9'
+                    : 'video/webm';
+    const recorder  = new MediaRecorder(stream, { mimeType, videoBitsPerSecond: 3000000 });
+    const chunks    = [];
+    recorder.ondataavailable = e => { if (e.data.size > 0) chunks.push(e.data); };
+
+    recorder.start(100);
+
+    // Cargar avatar si existe
+    let avatarImg = null;
+    if (conAvatar && avatarDataURL) {
+        avatarImg = await cargarImagen(avatarDataURL);
+    }
+
+    // Precargar imágenes de diapositivas
+    const imgCache = {};
+    for (const item of listaSubapartadosGlobal) {
+        const sub = item.subapartado;
+        const img = contenidoDiapositivas[sub]?.resumen?.img;
+        if (img) {
+            try { imgCache[sub] = await cargarImagen(img); } catch(_) {}
+        }
+    }
+
+    // Renderizar cada diapositiva
+    for (let idx = 0; idx < listaSubapartadosGlobal.length; idx++) {
+        const item   = listaSubapartadosGlobal[idx];
+        const sub    = item.subapartado;
+        const bloque = contenidoDiapositivas[sub];
+        const texto  = guiones[sub] || sub;
+
+        // Dibujar diapositiva en canvas
+        dibujarSlideCanvas(ctx, W, H, sub, item.padre, bloque, imgCache[sub], avatarImg, idx, listaSubapartadosGlobal.length);
+
+        // Narrar con Web Speech y esperar a que termine
+        await narrarConCanvas(texto, audioCtx, audioDestNode);
+
+        // Pausa de 0.5s entre diapositivas
+        await new Promise(r => setTimeout(r, 500));
+    }
+
+    // Diapositiva final
+    dibujarSlideFinal(ctx, W, H);
+    await new Promise(r => setTimeout(r, 2000));
+
+    // Parar grabación y descargar
+    recorder.stop();
+    await new Promise(resolve => { recorder.onstop = resolve; });
+
+    const ext  = mimeType.includes('mp4') ? 'mp4' : 'webm';
+    const blob = new Blob(chunks, { type: mimeType });
+    const url  = URL.createObjectURL(blob);
+    const a    = document.createElement('a');
+    a.href     = url;
+    a.download = `Video_AprendIA_${datosCurriculares.tema.replace(/\s+/g,'_')}.${ext}`;
+    document.body.appendChild(a); a.click();
+    document.body.removeChild(a);
+    setTimeout(() => URL.revokeObjectURL(url), 5000);
+
+    mostrarToast(`✅ Vídeo descargado (.${ext})`);
+    const btn = document.getElementById('btn-generar-video');
+    if (btn) { btn.disabled = false; btn.textContent = '🎬 Generar Vídeo'; }
+
+    // Mostrar audios individuales también
+    mostrarAudiosIndividuales(guiones);
+}
+
+function cargarImagen(src) {
+    return new Promise((resolve, reject) => {
+        const img = new Image();
+        img.crossOrigin = 'anonymous';
+        img.onload  = () => resolve(img);
+        img.onerror = () => reject(new Error('img'));
+        img.src = src;
+    });
+}
+
+function narrarConCanvas(texto, audioCtx, destNode) {
+    return new Promise(resolve => {
+        if (!('speechSynthesis' in window)) { setTimeout(resolve, 2000); return; }
+        speechSynthesis.cancel();
+        const utt   = new SpeechSynthesisUtterance(texto);
+        utt.lang    = 'es-ES'; utt.rate = 0.88; utt.pitch = 1;
+        const voices = speechSynthesis.getVoices();
+        const match  = voices.find(v => v.lang.startsWith('es'));
+        if (match) utt.voice = match;
+        utt.onend  = () => setTimeout(resolve, 300);
+        utt.onerror = () => resolve();
+        speechSynthesis.speak(utt);
+    });
+}
+
+// Paleta de colores para slides en canvas
+const SLIDE_PALETTES = [
+    { bg:'#dbeafe', accent:'#3b82f6', dark:'#1e3a5f', text:'#1e293b' },
+    { bg:'#dcfce7', accent:'#16a34a', dark:'#14532d', text:'#1e293b' },
+    { bg:'#fce7f3', accent:'#ec4899', dark:'#831843', text:'#1e293b' },
+    { bg:'#fef3c7', accent:'#d97706', dark:'#78350f', text:'#1e293b' },
+    { bg:'#ede9fe', accent:'#7c3aed', dark:'#4c1d95', text:'#1e293b' },
+    { bg:'#ccfbf1', accent:'#0d9488', dark:'#134e4a', text:'#1e293b' },
+    { bg:'#ffedd5', accent:'#ea580c', dark:'#7c2d12', text:'#1e293b' },
+    { bg:'#f1f5f9', accent:'#475569', dark:'#1e293b', text:'#1e293b' },
+];
+
+function dibujarSlideCanvas(ctx, W, H, titulo, padre, bloque, imgSlide, avatarImg, idx, total) {
+    const pal = SLIDE_PALETTES[idx % SLIDE_PALETTES.length];
+
+    // Fondo
+    ctx.fillStyle = pal.bg;
+    ctx.fillRect(0, 0, W, H);
+
+    // Patrón punteado sutil
+    ctx.fillStyle = 'rgba(0,0,0,0.04)';
+    for (let x = 0; x < W; x += 32) for (let y = 0; y < H; y += 32)
+        ctx.fillRect(x, y, 1.5, 1.5);
+
+    // Barra lateral izquierda
+    ctx.fillStyle = pal.accent;
+    ctx.fillRect(0, 0, 6, H);
+
+    // Cabecera: badge padre
+    roundRect(ctx, 24, 24, 200, 28, 6, pal.accent);
+    ctx.fillStyle = '#fff';
+    ctx.font = 'bold 11px "Arial"';
+    ctx.fillText(padre.substring(0, 25).toUpperCase(), 34, 43);
+
+    // Número / total
+    ctx.fillStyle = pal.accent + '33';
+    ctx.font = 'bold 80px Arial';
+    ctx.textAlign = 'right';
+    ctx.fillText(`${idx+1}/${total}`, W - 30, 100);
+    ctx.textAlign = 'left';
+
+    // Título
+    ctx.fillStyle = pal.dark;
+    ctx.font = 'bold 36px Arial';
+    wrapText(ctx, titulo, 24, 90, W * 0.65, 44);
+
+    // Separador
+    ctx.fillStyle = pal.accent;
+    ctx.fillRect(24, 150, W * 0.6, 2);
+
+    // Texto (intro + puntos)
+    const partes   = (bloque?.resumen?.texto || '').split('
+
+');
+    const intro    = partes[0] || '';
+    const puntos   = partes.slice(1).join('
+').split('
+').filter(l => l.trim());
+    
+    ctx.fillStyle = pal.text;
+    ctx.font = '16px Arial';
+    let y = 175;
+    // intro
+    y = wrapText(ctx, intro, 24, y, W * 0.6, 22) + 12;
+    // puntos
+    ctx.font = '15px Arial';
+    puntos.slice(0, 5).forEach(p => {
+        // bullet
+        ctx.fillStyle = pal.accent;
+        ctx.fillRect(24, y - 10, 3, 14);
+        ctx.fillStyle = pal.text;
+        y = wrapText(ctx, p.replace(/^[•\-]\s*/, ''), 34, y, W * 0.58, 20) + 6;
+        if (y > H - 80) return;
+    });
+
+    // Imagen de la diapositiva (derecha)
+    if (imgSlide) {
+        const ix = W * 0.66, iy = 60, iw = W * 0.31, ih = H * 0.55;
+        ctx.save();
+        roundRect(ctx, ix, iy, iw, ih, 12, null, true);
+        ctx.clip();
+        ctx.drawImage(imgSlide, ix, iy, iw, ih);
+        ctx.restore();
+        // Marco
+        ctx.strokeStyle = pal.accent + '66';
+        ctx.lineWidth   = 2;
+        roundRectStroke(ctx, ix, iy, iw, ih, 12);
+    }
+
+    // Avatar (esquina inf derecha si existe)
+    if (avatarImg) {
+        const ar = 100;
+        ctx.save();
+        ctx.beginPath();
+        ctx.arc(W - 70, H - 70, ar/2, 0, Math.PI * 2);
+        ctx.closePath();
+        ctx.clip();
+        ctx.drawImage(avatarImg, W - 70 - ar/2, H - 70 - ar/2, ar, ar);
+        ctx.restore();
+        // Anillo
+        ctx.strokeStyle = pal.accent;
+        ctx.lineWidth   = 3;
+        ctx.beginPath();
+        ctx.arc(W - 70, H - 70, ar/2 + 3, 0, Math.PI * 2);
+        ctx.stroke();
+    }
+
+    // Pie
+    ctx.fillStyle = pal.text + '66';
+    ctx.font      = '12px Arial';
+    ctx.fillText(`AprendIA · ${datosCurriculares.tema}`, 24, H - 16);
+
+    // Barra de progreso
+    ctx.fillStyle = 'rgba(0,0,0,0.08)';
+    ctx.fillRect(0, H - 6, W, 6);
+    ctx.fillStyle = pal.accent;
+    ctx.fillRect(0, H - 6, W * ((idx + 1) / total), 6);
+}
+
+function dibujarSlideFinal(ctx, W, H) {
+    ctx.fillStyle = '#0f172a';
+    ctx.fillRect(0, 0, W, H);
+    const grad = ctx.createLinearGradient(0, 0, W, H);
+    grad.addColorStop(0, 'rgba(124,92,252,0.2)');
+    grad.addColorStop(1, 'rgba(0,212,255,0.1)');
+    ctx.fillStyle = grad;
+    ctx.fillRect(0, 0, W, H);
+    ctx.fillStyle = '#f0efff';
+    ctx.font      = 'bold 48px Arial';
+    ctx.textAlign = 'center';
+    ctx.fillText(datosCurriculares.tema, W/2, H/2 - 30);
+    ctx.font      = '22px Arial';
+    ctx.fillStyle = '#8080b0';
+    ctx.fillText('Generado con AprendIA · OpenRouter AI', W/2, H/2 + 30);
+    ctx.textAlign = 'left';
+}
+
+// Helpers canvas
+function roundRect(ctx, x, y, w, h, r, fill, clipOnly = false) {
+    ctx.beginPath();
+    ctx.moveTo(x + r, y);
+    ctx.lineTo(x + w - r, y);
+    ctx.quadraticCurveTo(x + w, y, x + w, y + r);
+    ctx.lineTo(x + w, y + h - r);
+    ctx.quadraticCurveTo(x + w, y + h, x + w - r, y + h);
+    ctx.lineTo(x + r, y + h);
+    ctx.quadraticCurveTo(x, y + h, x, y + h - r);
+    ctx.lineTo(x, y + r);
+    ctx.quadraticCurveTo(x, y, x + r, y);
+    ctx.closePath();
+    if (!clipOnly) { if (fill) { ctx.fillStyle = fill; } ctx.fill(); }
+}
+
+function roundRectStroke(ctx, x, y, w, h, r) {
+    roundRect(ctx, x, y, w, h, r, null, true);
+    ctx.stroke();
+}
+
+function wrapText(ctx, text, x, y, maxW, lineH) {
+    if (!text) return y;
+    const words = text.split(' ');
+    let line = '';
+    for (const word of words) {
+        const test = line + word + ' ';
+        if (ctx.measureText(test).width > maxW && line) {
+            ctx.fillText(line, x, y);
+            line = word + ' ';
+            y += lineH;
+        } else { line = test; }
+    }
+    if (line.trim()) { ctx.fillText(line, x, y); y += lineH; }
+    return y;
+}
+
+function mostrarAudiosIndividuales(guiones) {
     const wrap  = document.getElementById('audio-resultado-wrap');
     const lista = document.getElementById('audio-list-container');
+    if (!wrap || !lista) return;
     wrap.style.display = 'block';
     lista.innerHTML    = '';
 
     listaSubapartadosGlobal.forEach((item, idx) => {
-        const sub  = item.subapartado;
-        const texto= guionesNarracion[sub] || '';
-        const div  = document.createElement('div');
+        const sub   = item.subapartado;
+        const texto = guiones[sub] || '';
+        const div   = document.createElement('div');
         div.className = 'audio-item';
         div.innerHTML = `
             <div class="audio-label">📌 ${idx+1}. ${sub}</div>
-            <div style="font-size:.78rem;color:var(--fog);margin-bottom:8px;line-height:1.5">${texto.substring(0,120)}...</div>
-            <button type="button" style="width:auto;padding:7px 16px;font-size:.82rem;margin:0;background:rgba(99,102,241,.12);color:var(--v2);border:1px solid rgba(99,102,241,.25);border-radius:8px"
-                onclick="reproducirFragmento('${sub}', this)" data-texto="${encodeURIComponent(texto)}">
-                ▶ Escuchar
-            </button>`;
+            <div class="audio-exc">${texto.substring(0,110)}...</div>
+            <button type="button" class="btn-play"
+                onclick="reproducirFragmento('${sub}', this)"
+                data-texto="${encodeURIComponent(texto)}">▶ Escuchar</button>`;
         lista.appendChild(div);
     });
-
-    mostrarToast('✅ Guiones de narración listos. Pulsa ▶ para escuchar.');
 }
 
 function reproducirFragmento(sub, btn) {
     if ('speechSynthesis' in window) speechSynthesis.cancel();
     const texto = decodeURIComponent(btn.getAttribute('data-texto'));
     const utt   = new SpeechSynthesisUtterance(texto);
-    utt.lang    = 'es-ES';
-    utt.rate    = 0.9;
-    utt.pitch   = 1;
-    const voices= speechSynthesis.getVoices();
-    const match = voices.find(v=>v.lang.startsWith('es'));
+    utt.lang    = 'es-ES'; utt.rate = 0.9; utt.pitch = 1;
+    const voices = speechSynthesis.getVoices();
+    const match  = voices.find(v => v.lang.startsWith('es'));
     if (match) utt.voice = match;
-    btn.textContent='⏸ Reproduciendo...';
-    utt.onend = () => { btn.textContent='▶ Escuchar'; };
+    btn.textContent = '⏸ Reproduciendo...';
+    utt.onend = () => { btn.textContent = '▶ Escuchar'; };
     speechSynthesis.speak(utt);
 }
 
 async function reproducirTodoElAudio(guiones) {
     if ('speechSynthesis' in window) speechSynthesis.cancel();
     for (const item of listaSubapartadosGlobal) {
-        const sub   = item.subapartado;
-        const texto = guiones[sub] || '';
+        const texto = guiones[item.subapartado] || '';
         await new Promise(resolve => {
-            const utt   = new SpeechSynthesisUtterance(texto);
-            utt.lang    = 'es-ES'; utt.rate=0.9; utt.pitch=1;
-            const voices= speechSynthesis.getVoices();
-            const match = voices.find(v=>v.lang.startsWith('es'));
-            if(match) utt.voice=match;
+            const utt = new SpeechSynthesisUtterance(texto);
+            utt.lang = 'es-ES'; utt.rate = 0.9;
+            const voices = speechSynthesis.getVoices();
+            const match  = voices.find(v => v.lang.startsWith('es'));
+            if (match) utt.voice = match;
             utt.onend = resolve;
             speechSynthesis.speak(utt);
         });
-        await new Promise(r=>setTimeout(r,600)); // pausa entre diapositivas
+        await new Promise(r => setTimeout(r, 500));
     }
 }
 
