@@ -360,12 +360,15 @@ async function llamarGemini(prompt, usarDocs = false) {
         // Detectar URL real para el Referer (funciona tanto en local como en GitHub Pages)
         const siteUrl = location.origin || 'https://aprendia.app';
         // Fallback automatico por modelos gratuitos -- nunca consumen creditos de pago
+        // Modelos gratuitos verificados junio 2026 -- con :free nunca consumen creditos
         const FREE_MODELS = [
-            'google/gemini-2.0-flash:free',
+            'openrouter/free',
             'meta-llama/llama-3.3-70b-instruct:free',
-            'deepseek/deepseek-r1:free',
+            'deepseek/deepseek-r1-distill-llama-70b:free',
             'qwen/qwen3-8b:free',
-            'mistralai/mistral-7b-instruct:free'
+            'openai/gpt-oss-20b:free',
+            'mistralai/mistral-7b-instruct:free',
+            'google/gemma-3-27b-it:free'
         ];
         r = null;
         for (const tryModel of FREE_MODELS) {
@@ -459,7 +462,7 @@ async function testearAPIKey(key) {
                 'Origin': siteUrl2
             },
             body: JSON.stringify({
-                model: 'meta-llama/llama-3.3-70b-instruct:free',
+                model: 'openrouter/free',
                 messages: [{ role: 'user', content: 'Di: {"ok":true}' }],
                 max_tokens: 20
             })
