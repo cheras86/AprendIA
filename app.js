@@ -1,5 +1,5 @@
 // =========================================================================
-//  AprendIA — Multi-API: Gemini + Unsplash + Pexels + Drive
+//  AprendIA -- Multi-API: Gemini + Unsplash + Pexels + Drive
 //  Nuevas funciones: Documentos de referencia · Vídeo narrado · Guion completo
 // =========================================================================
 
@@ -35,7 +35,7 @@ const estilosFondos = {
     "gris-perla":     "linear-gradient(135deg,#f1f5f9 0%,#f8fafc 100%)"
 };
 const ESTILOS_LISTA = Object.keys(estilosFondos);
-// Trama SVG asociada a cada fondo — da personalidad visual única
+// Trama SVG asociada a cada fondo -- da personalidad visual única
 const ESTILOS_TRAMA = {
     "azul-sereno":       "dots",
     "verde-bosque":      "lines",
@@ -57,7 +57,7 @@ function estiloParaIndice(i) { return ESTILOS_LISTA[i % ESTILOS_LISTA.length]; }
 // =========================================================================
 //  INIT
 // =========================================================================
-// Ejecutar init cuando el DOM esté listo — compatible con defer y file://
+// Ejecutar init cuando el DOM esté listo -- compatible con defer y file://
 function initApp() {
     registrarServiceWorker();
     configurarInstalacionPWA();
@@ -462,7 +462,7 @@ async function testearAPIKey(key) {
 
 // Gemini TTS (Multimodal Live API vía REST simulada con speech synthesis)
 // Gemini 2.0 Flash no expone TTS REST directo en el free tier todavía,
-// por lo que usamos Web Speech API (SpeechSynthesis) del navegador — funciona offline,
+// por lo que usamos Web Speech API (SpeechSynthesis) del navegador -- funciona offline,
 // sin coste y sin API key adicional. Genera audio por diapositiva.
 async function generarAudioDiapositiva(texto, voz) {
     return new Promise((resolve) => {
@@ -483,7 +483,7 @@ async function generarAudioDiapositiva(texto, voz) {
 //  UNSPLASH / PEXELS / FALLBACK
 // =========================================================================
 // =========================================================================
-//  CONTROLES DE IMAGEN — subir, ajustar, encajar
+//  CONTROLES DE IMAGEN -- subir, ajustar, encajar
 // =========================================================================
 
 function subirImagenPropia(input) {
@@ -597,7 +597,7 @@ async function buscarImagenes(keywords, cantidad=5) {
             }
         } catch(_) {}
     }
-    // Fallback: Wikimedia Commons API — imágenes reales relacionadas con el tema
+    // Fallback: Wikimedia Commons API -- imágenes reales relacionadas con el tema
     try {
         const wiki = await fetch(
             `https://en.wikipedia.org/w/api.php?action=query&generator=search&gsrsearch=${q}&prop=pageimages&piprop=original&pilimit=${cantidad}&format=json&origin=*`
@@ -779,7 +779,7 @@ async function subirPPTXADrive(tema) {
 }
 
 // =========================================================================
-//  FASE 1 — CONFIGURACIÓN
+//  FASE 1 -- CONFIGURACIÓN
 // =========================================================================
 async function handleConfig(e) {
     e.preventDefault();
@@ -891,7 +891,7 @@ async function generarTodoElContenido() {
     const LOTE=3; contenidoDiapositivas={};
     for(let i=0;i<listaSubapartadosGlobal.length;i+=LOTE){
         const lote=listaSubapartadosGlobal.slice(i,i+LOTE);
-        mostrarCargando(`Generando material ${i+1}–${Math.min(i+LOTE,listaSubapartadosGlobal.length)} de ${listaSubapartadosGlobal.length}...`);
+        mostrarCargando(`Generando material ${i+1}-${Math.min(i+LOTE,listaSubapartadosGlobal.length)} de ${listaSubapartadosGlobal.length}...`);
         const tieneReferencias = documentosReferencia.length>0;
         const prompt=`Tema: "${datosCurriculares.tema}" (${datosCurriculares.nivel}). Estilo: "${datosCurriculares.estilo}".
 ${tieneReferencias?'Usa los DOCUMENTOS DE REFERENCIA adjuntos para enriquecer el contenido.':''}
@@ -1090,7 +1090,7 @@ function guardarEnCarpeta(notificar) {
 function guardarTodoEnCarpetaHistorial(n){ guardarEnCarpeta(n); }
 
 // =========================================================================
-//  VÍDEO NARRADO — Canvas + MediaRecorder + Web Speech API
+//  VÍDEO NARRADO -- Canvas + MediaRecorder + Web Speech API
 //  Genera MP4/WebM descargable con diapositivas + audio narrado
 //  Opción: avatar (foto del usuario) hablando en esquina
 // =========================================================================
@@ -1337,13 +1337,9 @@ function dibujarSlideCanvas(ctx, W, H, titulo, padre, bloque, imgSlide, avatarIm
     ctx.fillRect(24, 150, W * 0.6, 2);
 
     // Texto (intro + puntos)
-    const partes   = (bloque?.resumen?.texto || '').split('
-
-');
+    const partes   = (bloque?.resumen?.texto || '').split('\n\n');
     const intro    = partes[0] || '';
-    const puntos   = partes.slice(1).join('
-').split('
-').filter(l => l.trim());
+    const puntos   = partes.slice(1).join('\n').split('\n').filter(l => l.trim());
     
     ctx.fillStyle = pal.text;
     ctx.font = '16px Arial';
@@ -1513,7 +1509,7 @@ async function reproducirTodoElAudio(guiones) {
 }
 
 // =========================================================================
-//  MODAL — GUION COMPLETO DEL PROFESOR
+//  MODAL -- GUION COMPLETO DEL PROFESOR
 // =========================================================================
 function abrirModalGuion() {
     const render = document.getElementById('guion-content-render');
@@ -1522,7 +1518,7 @@ function abrirModalGuion() {
     // Cabecera
     const cab = document.createElement('div');
     cab.className = 'g-section';
-    cab.innerHTML = `<div class="g-title" style="font-size:1.1rem;color:var(--snow)">📖 Guion Completo — ${datosCurriculares.tema}</div>
+    cab.innerHTML = `<div class="g-title" style="font-size:1.1rem;color:var(--snow)">📖 Guion Completo -- ${datosCurriculares.tema}</div>
         <div class="g-text" style="color:var(--fog)">Nivel: ${datosCurriculares.nivel.toUpperCase()} · Duración: ${datosCurriculares.duracion} · Estilo: ${datosCurriculares.estilo}</div>`;
     render.appendChild(cab);
 
@@ -1569,698 +1565,119 @@ function abrirModalGuion() {
 }
 
 function descargarGuion() {
-    let texto = `GUION COMPLETO DEL PROFESOR\n`;
-    texto    += `AprendIA · Gemini AI\n`;
-    texto    += `${'='.repeat(60)}\n\n`;
-    texto    += `TEMA: ${datosCurriculares.tema}\n`;
-    texto    += `NIVEL: ${datosCurriculares.nivel} | DURACIÓN: ${datosCurriculares.duracion}\n`;
-    texto    += `ENFOQUE: ${datosCurriculares.estilo}\n\n`;
+    const sep = '='.repeat(50);
+    const sep2 = '-'.repeat(50);
+    let texto = 'GUION COMPLETO DEL PROFESOR\n';
+    texto += 'AprendIA - Gemini AI\n';
+    texto += sep + '\n\n';
+    texto += 'TEMA: ' + datosCurriculares.tema + '\n';
+    texto += 'NIVEL: ' + datosCurriculares.nivel + ' | DURACION: ' + datosCurriculares.duracion + '\n';
+    texto += 'ENFOQUE: ' + datosCurriculares.estilo + '\n\n';
 
     listaSubapartadosGlobal.forEach((item, idx) => {
         const sub   = item.subapartado;
-        const bloque= contenidoDiapositivas[sub];
-        if (!bloque) return;
-        texto += `${'─'.repeat(50)}\n`;
-        texto += `${idx+1}. ${sub.toUpperCase()}\n`;
-        texto += `${'─'.repeat(50)}\n\n`;
-        texto += `[PUNTOS CLAVE]\n${bloque.resumen.texto}\n\n`;
-        texto += `[GUION DOCENTE — PUNTOS CLAVE]\n${bloque.resumen.script}\n\n`;
-        texto += `[CASO PRÁCTICO]\n${bloque.ejemplo.texto}\n\n`;
-        texto += `[GUION DOCENTE — CASO PRÁCTICO]\n${bloque.ejemplo.script}\n\n`;
-        texto += `[EVALUACIÓN]\n${bloque.quiz.texto}\n\n`;
-        texto += `[RESPUESTA Y JUSTIFICACIÓN]\n${bloque.quiz.script}\n\n`;
-    });
-
-    const blob = new Blob([texto], { type:'text/plain;charset=utf-8' });
-    const url  = URL.createObjectURL(blob);
-    const a    = document.createElement('a');
-    a.href     = url;
-    a.download = `Guion_AprendIA_${datosCurriculares.tema.replace(/\s+/g,'_')}.txt`;
-    document.body.appendChild(a); a.click();
-    document.body.removeChild(a); URL.revokeObjectURL(url);
-    mostrarToast('📖 Guion descargado.');
-}
-
-// =========================================================================
-//  EXPORTAR PPTX — DISEÑO PROFESIONAL
-// =========================================================================
-
-// Paleta de temas: cada apartado padre recibe uno diferente
-const TEMAS_PPTX = [
-    { bg:'1e293b', accent:'6366f1', light:'a5b4fc', tag:'ffffff', text:'e2e8f0' }, // Índigo oscuro
-    { bg:'0f2027', accent:'06b6d4', light:'67e8f9', tag:'ffffff', text:'e0f7fa' }, // Cyan profundo
-    { bg:'1a1a2e', accent:'8b5cf6', light:'c4b5fd', tag:'ffffff', text:'ede9fe' }, // Violeta
-    { bg:'0d1f0d', accent:'22c55e', light:'86efac', tag:'ffffff', text:'dcfce7' }, // Verde bosque
-    { bg:'1c0a00', accent:'f59e0b', light:'fcd34d', tag:'ffffff', text:'fef3c7' }, // Ámbar
-    { bg:'1e0a2e', accent:'ec4899', light:'f9a8d4', tag:'ffffff', text:'fce7f3' }, // Rosa
-    { bg:'0a1929', accent:'0ea5e9', light:'7dd3fc', tag:'ffffff', text:'e0f2fe' }, // Azul cielo
-    { bg:'1a0a0a', accent:'ef4444', light:'fca5a5', tag:'ffffff', text:'fee2e2' }, // Rojo
-];
-
-function _hexFromStyle(style) {
-    const map = {
-        'azul-sereno':'dbeafe','verde-bosque':'dcfce7','rosa-suave':'fce7f3',
-        'ambar-calido':'fef3c7','violeta-niebla':'ede9fe','teal-oceano':'ccfbf1',
-        'naranja-atardecer':'ffedd5','gris-perla':'f1f5f9'
-    };
-    return map[style] || 'f1f5f9';
-}
-
-function _accentFromStyle(style) {
-    const map = {
-        'azul-sereno':'3b82f6','verde-bosque':'16a34a','rosa-suave':'ec4899',
-        'ambar-calido':'d97706','violeta-niebla':'7c3aed','teal-oceano':'0d9488',
-        'naranja-atardecer':'ea580c','gris-perla':'475569'
-    };
-    return map[style] || '6366f1';
-}
-
-function _darkFromStyle(style) {
-    const map = {
-        'azul-sereno':'1e3a5f','verde-bosque':'14532d','rosa-suave':'831843',
-        'ambar-calido':'78350f','violeta-niebla':'4c1d95','teal-oceano':'134e4a',
-        'naranja-atardecer':'7c2d12','gris-perla':'1e293b'
-    };
-    return map[style] || '1e293b';
-}
-
-// Parsea el texto en intro + viñetas
-function _parsearTexto(texto) {
-    const partes  = (texto||'').split('\n\n');
-    const intro   = partes[0] || '';
-    const lineas  = partes.slice(1).join('\n').split('\n').filter(Boolean);
-    const puntos  = lineas.filter(l => l.trim().startsWith('•'));
-    const detalle = lineas.filter(l => !l.trim().startsWith('•')).join(' ');
-    return { intro, puntos, detalle };
-}
-
-function construirPPTX() {
-    const pptx = new PptxGenJS();
-    pptx.layout = 'LAYOUT_16x9';
-    pptx.defineLayout({ name:'LAYOUT_16x9', width:13.33, height:7.5 });
-
-    // ── PORTADA ──────────────────────────────────────────────────────────────
-    const portada = pptx.addSlide();
-    // Fondo degradado simulado con dos rectángulos
-    portada.addShape(pptx.ShapeType.rect, { x:0, y:0, w:13.33, h:7.5, fill:{color:'0f172a'} });
-    portada.addShape(pptx.ShapeType.rect, { x:0, y:0, w:6.5,  h:7.5, fill:{color:'6366f1'}, transparency:80 });
-    // Línea decorativa
-    portada.addShape(pptx.ShapeType.rect, { x:1, y:2.8, w:2.5, h:0.06, fill:{color:'6366f1'} });
-    // Badge nivel
-    portada.addShape(pptx.ShapeType.roundRect, { x:1, y:1.6, w:2.2, h:0.38, fill:{color:'6366f1'}, rectRadius:0.1 });
-    portada.addText(datosCurriculares.nivel.toUpperCase(), {
-        x:1, y:1.6, w:2.2, h:0.38,
-        fontSize:9, bold:true, color:'ffffff', align:'center', valign:'middle', fontFace:'Calibri'
-    });
-    // Título
-    portada.addText(datosCurriculares.tema, {
-        x:1, y:2.1, w:11, h:2.2,
-        fontSize:36, bold:true, color:'f8fafc', fontFace:'Calibri',
-        valign:'middle', charSpacing:0.5
-    });
-    // Meta info
-    portada.addText(`Duración: ${datosCurriculares.duracion}  ·  Enfoque: ${datosCurriculares.estilo}`, {
-        x:1, y:4.5, w:9, h:0.4,
-        fontSize:11, color:'94a3b8', fontFace:'Calibri', italic:true
-    });
-    // Marca
-    portada.addText('AprendIA · OpenRouter AI', {
-        x:1, y:6.8, w:6, h:0.4,
-        fontSize:9, color:'475569', fontFace:'Calibri'
-    });
-
-    // ── DIAPOSITIVAS DE CONTENIDO ────────────────────────────────────────────
-    let padreActual = '';
-    let indicePadre = -1;
-
-    listaSubapartadosGlobal.forEach((item, idxGlobal) => {
-        const sub    = item.subapartado;
         const bloque = contenidoDiapositivas[sub];
         if (!bloque) return;
-
-        // Cambio de apartado padre → diapositiva separadora
-        if (item.padre !== padreActual) {
-            padreActual  = item.padre;
-            indicePadre  = (indicePadre + 1) % TEMAS_PPTX.length;
-            const tema   = TEMAS_PPTX[indicePadre];
-            const sep    = pptx.addSlide();
-            sep.addShape(pptx.ShapeType.rect, { x:0, y:0, w:13.33, h:7.5, fill:{color:tema.bg} });
-            sep.addShape(pptx.ShapeType.rect, { x:0, y:0, w:13.33, h:0.08, fill:{color:tema.accent} });
-            sep.addShape(pptx.ShapeType.rect, { x:0, y:7.42, w:13.33, h:0.08, fill:{color:tema.accent} });
-            // Número de bloque grande decorativo
-            sep.addText(String(indicePadre + 1).padStart(2,'0'), {
-                x:9, y:1, w:3.5, h:5, fontSize:140, bold:true,
-                color:tema.accent, transparency:80, fontFace:'Calibri', align:'right'
-            });
-            sep.addText('MÓDULO', {
-                x:1, y:2.4, w:4, h:0.4,
-                fontSize:10, bold:true, color:tema.accent, fontFace:'Calibri', charSpacing:4
-            });
-            sep.addText(item.padre, {
-                x:1, y:2.9, w:8.5, h:2.4,
-                fontSize:34, bold:true, color:tema.tag, fontFace:'Calibri', valign:'top'
-            });
-            sep.addText(`${listaSubapartadosGlobal.filter(x=>x.padre===item.padre).length} subapartados`, {
-                x:1, y:6.5, w:5, h:0.4,
-                fontSize:10, color:tema.light, fontFace:'Calibri', italic:true
-            });
-        }
-
-        const tema = TEMAS_PPTX[indicePadre];
-
-        // ── SLIDE PUNTOS CLAVE ──
-        _addSlidePro(pptx, sub, bloque.resumen, 'PUNTOS CLAVE', idxGlobal, tema);
-
-        // ── SLIDE CASO PRÁCTICO ──
-        _addSlidePro(pptx, sub, bloque.ejemplo, 'CASO PRÁCTICO', idxGlobal, tema);
-
-        // ── SLIDE QUIZ ──────────
-        _addSlideQuizPro(pptx, sub, bloque.quiz, idxGlobal, tema);
+        texto += sep2 + '\n';
+        texto += (idx+1) + '. ' + sub.toUpperCase() + '\n';
+        texto += sep2 + '\n\n';
+        texto += '[PUNTOS CLAVE]\n' + bloque.resumen.texto + '\n\n';
+        texto += '[GUION DOCENTE -- PUNTOS CLAVE]\n' + bloque.resumen.script + '\n\n';
+        texto += '[CASO PRACTICO]\n' + bloque.ejemplo.texto + '\n\n';
+        texto += '[GUION DOCENTE -- CASO PRACTICO]\n' + bloque.ejemplo.script + '\n\n';
+        texto += '[EVALUACION]\n' + bloque.quiz.texto + '\n\n';
+        texto += '[RESPUESTA Y JUSTIFICACION]\n' + bloque.quiz.script + '\n\n';
     });
 
-    // ── CIERRE ───────────────────────────────────────────────────────────────
-    const cierre = pptx.addSlide();
-    cierre.addShape(pptx.ShapeType.rect, { x:0, y:0, w:13.33, h:7.5, fill:{color:'0f172a'} });
-    cierre.addShape(pptx.ShapeType.rect, { x:0, y:3.5, w:13.33, h:0.04, fill:{color:'6366f1'} });
-    cierre.addText('Fin de la presentación', {
-        x:1, y:1.5, w:11, h:1.5, fontSize:36, bold:true,
-        color:'f8fafc', fontFace:'Calibri', align:'center'
-    });
-    cierre.addText(`${datosCurriculares.tema} · ${listaSubapartadosGlobal.length} conceptos trabajados`, {
-        x:1, y:3.2, w:11, h:0.6, fontSize:13,
-        color:'64748b', fontFace:'Calibri', align:'center', italic:true
-    });
-    cierre.addText('Generado con AprendIA', {
-        x:1, y:6.8, w:11, h:0.4, fontSize:9,
-        color:'334155', fontFace:'Calibri', align:'center'
-    });
-
-    return pptx;
-}
-
-function _addSlidePro(pptx, titulo, data, tag, idx, tema) {
-    const s        = pptx.addSlide();
-    const bgHex    = _hexFromStyle(data?.style);
-    const acHex    = _accentFromStyle(data?.style);
-    const dkHex    = _darkFromStyle(data?.style);
-    const { intro, puntos, detalle } = _parsearTexto(data?.texto || '');
-
-    // Fondo suave
-    s.addShape(pptx.ShapeType.rect, { x:0, y:0, w:13.33, h:7.5, fill:{color:bgHex} });
-
-    // Barra lateral izquierda de color
-    s.addShape(pptx.ShapeType.rect, { x:0, y:0, w:0.18, h:7.5, fill:{color:acHex} });
-
-    // Cabecera: badge tag + título
-    s.addShape(pptx.ShapeType.roundRect, {
-        x:0.35, y:0.28, w:1.6, h:0.32,
-        fill:{color:acHex}, rectRadius:0.06
-    });
-    s.addText(tag, {
-        x:0.35, y:0.28, w:1.6, h:0.32,
-        fontSize:8, bold:true, color:'ffffff',
-        align:'center', valign:'middle', fontFace:'Calibri'
-    });
-    s.addText(titulo, {
-        x:0.35, y:0.65, w:8.2, h:0.75,
-        fontSize:18, bold:true, color:dkHex,
-        fontFace:'Calibri', valign:'top'
-    });
-
-    // Separador
-    s.addShape(pptx.ShapeType.rect, { x:0.35, y:1.45, w:8.2, h:0.03, fill:{color:acHex}, transparency:60 });
-
-    // Texto intro
-    if (intro) {
-        s.addText(intro, {
-            x:0.35, y:1.55, w:8.2, h:0.8,
-            fontSize:11, color:'334155', fontFace:'Calibri',
-            valign:'top', italic:true
-        });
-    }
-
-    // Viñetas con estilo
-    if (puntos.length) {
-        const items = puntos.map(p => ({
-            text: p.replace(/^•\s*/,''),
-            options: { fontSize:10.5, color:'1e293b', fontFace:'Calibri', bullet:{code:'2022'}, paraSpaceAfter:4 }
-        }));
-        s.addText(items, {
-            x:0.35, y:2.42, w:8.2, h:3.8,
-            valign:'top', lineSpacing:18
-        });
-    }
-
-    // Imagen a la derecha
-    if (data?.img) {
-        // Marco de imagen
-        s.addShape(pptx.ShapeType.rect, {
-            x:8.8, y:0.28, w:4.25, h:4.8,
-            fill:{color:'ffffff'}, line:{color:acHex, width:1.5},
-            shadow:{type:'outer', color:'64748b', blur:8, offset:3, angle:45, opacity:.15}
-        });
-        try {
-            s.addImage({ path:data.img, x:8.82, y:0.3, w:4.21, h:4.76, sizing:{type:'cover'} });
-        } catch(_) {}
-    }
-
-    // Texto detalle abajo (si existe)
-    if (detalle) {
-        s.addShape(pptx.ShapeType.rect, { x:0, y:6.3, w:13.33, h:1.2, fill:{color:dkHex}, transparency:90 });
-        s.addText(detalle.substring(0, 220), {
-            x:0.35, y:6.35, w:12.6, h:1.05,
-            fontSize:9, color:'475569', fontFace:'Calibri',
-            valign:'top', italic:true
-        });
-    }
-
-    // Pie: número y nombre tema
-    s.addText(`${idx + 1}  ·  ${datosCurriculares.tema}`, {
-        x:0.35, y:7.22, w:8, h:0.25,
-        fontSize:7.5, color:'94a3b8', fontFace:'Calibri'
-    });
-}
-
-function _addSlideQuizPro(pptx, titulo, data, idx, tema) {
-    const s = pptx.addSlide();
-
-    // Fondo oscuro para el quiz
-    s.addShape(pptx.ShapeType.rect, { x:0, y:0, w:13.33, h:7.5, fill:{color:'0f172a'} });
-    s.addShape(pptx.ShapeType.rect, { x:0, y:0, w:13.33, h:0.06, fill:{color:tema.accent} });
-    s.addShape(pptx.ShapeType.rect, { x:0, y:7.44, w:13.33, h:0.06, fill:{color:tema.accent} });
-
-    // Badge
-    s.addShape(pptx.ShapeType.roundRect, { x:0.5, y:0.3, w:1.6, h:0.32, fill:{color:tema.accent}, rectRadius:0.06 });
-    s.addText('🧠 EVALUACIÓN', { x:0.5, y:0.3, w:1.6, h:0.32, fontSize:7.5, bold:true, color:'ffffff', align:'center', valign:'middle', fontFace:'Calibri' });
-
-    // Título
-    s.addText(titulo, { x:0.5, y:0.72, w:12.3, h:0.7, fontSize:17, bold:true, color:'f1f5f9', fontFace:'Calibri' });
-
-    // Separador
-    s.addShape(pptx.ShapeType.rect, { x:0.5, y:1.48, w:12.3, h:0.04, fill:{color:tema.accent}, transparency:50 });
-
-    // Parsear pregunta y opciones
-    const lineas  = (data?.texto||'').split('\n').filter(Boolean);
-    const pregunta = lineas[0] || '';
-    const opciones = lineas.slice(1);
-
-    s.addText(pregunta, {
-        x:0.5, y:1.6, w:12.3, h:1.0,
-        fontSize:14, bold:true, color:'f8fafc', fontFace:'Calibri', valign:'top'
-    });
-
-    // Opciones con cajas
-    const colores = [tema.accent, '06b6d4', '22c55e', 'f59e0b'];
-    opciones.forEach((op, i) => {
-        const row = Math.floor(i / 2);
-        const col = i % 2;
-        const x   = 0.5 + col * 6.4;
-        const y   = 2.75 + row * 1.55;
-        s.addShape(pptx.ShapeType.roundRect, {
-            x, y, w:6.1, h:1.3,
-            fill:{color:colores[i]||tema.accent}, transparency:85,
-            line:{color:colores[i]||tema.accent, width:1.2},
-            rectRadius:0.12
-        });
-        s.addText(op, {
-            x:x+0.15, y:y+0.08, w:5.8, h:1.14,
-            fontSize:12, color:'f1f5f9', fontFace:'Calibri', valign:'middle', bold: i===0
-        });
-    });
-
-    // Script/respuesta al pie
-    if (data?.script) {
-        s.addShape(pptx.ShapeType.rect, { x:0, y:6.4, w:13.33, h:1.1, fill:{color:'1e293b'} });
-        s.addText('Respuesta · ' + data.script.substring(0, 180), {
-            x:0.5, y:6.45, w:12.3, h:0.95,
-            fontSize:8.5, color:'94a3b8', fontFace:'Calibri', valign:'middle', italic:true
-        });
-    }
-}
-
-function exportarClaseAPowerPoint(){
-    construirPPTX().writeFile({fileName:`Presentacion_AprendIA_${datosCurriculares.tema.replace(/\s+/g,'_')}`});
-    mostrarToast('📊 PowerPoint generando...');
-}
-
-// =========================================================================
-//  EXPORTAR EXAMEN WORD
-// =========================================================================
-async function exportarExamenWord() {
-    mostrarCargando("Diseñando examen con Gemini...");
-    const prompt=`Diseña un examen formal de 10 preguntas para "${datosCurriculares.nivel}" sobre "${datosCurriculares.tema}".
-BLOQUE 1 (6 prácticas): problemas o análisis.
-BLOQUE 2 (4 teóricas): definición, relacionar, completar, opción múltiple con justificación.
-Devuelve SOLO: {"practicas":["P1","P2","P3","P4","P5","P6"],"teoricas":["P7","P8","P9","P10"]}`;
-    try {
-        const ex=await llamarGemini(prompt, documentosReferencia.length>0);
-        const html=`<html xmlns:o='urn:schemas-microsoft-com:office:office' xmlns:w='urn:schemas-microsoft-com:office:word'>
-<head><meta charset="UTF-8"><style>body{font-family:Calibri;padding:20px;line-height:1.4}
-.t{width:100%;border:2px solid #1b365d;margin-bottom:25px;border-collapse:collapse}.t td{border:1px solid #1b365d;padding:8px;font-size:11pt}
-.ti{text-align:center;color:#1b365d;font-size:18pt;font-weight:bold;text-transform:uppercase}
-.st{font-size:13pt;font-weight:bold;color:white;background:#1b365d;padding:6px;margin-top:20px;text-transform:uppercase}
-.q{font-size:11pt;margin-bottom:8px;font-weight:bold}.a{color:#94a3b8;font-size:11pt;margin-bottom:24px}
-</style></head><body>
-<div class="ti">Evaluación de Competencias</div>
-<p style="text-align:center;font-style:italic;color:#475569">AprendIA · Gemini AI (Google)</p>
-<table class="t">
-<tr><td width="60%"><b>MATERIA:</b> ${datosCurriculares.tema}</td><td><b>FECHA:</b> ___________</td></tr>
-<tr><td><b>ALUMNO/A:</b> ________________________________________________</td><td><b>NOTA:</b> /10</td></tr>
-<tr><td><b>NIVEL:</b> ${datosCurriculares.nivel.toUpperCase()}</td><td><b>TIEMPO:</b> 60 min</td></tr>
-</table>
-<div class="st">Bloque I — Aplicación Práctica (6 puntos)</div>
-${(ex.practicas||[]).map((q,i)=>`<div class="q">${i+1}. ${q}</div><div class="a">.........................................................................................................................................................................................................<br><br>.........................................................................................................................................................................................................<br><br>.........................................................................................................................................................................................................</div>`).join('')}
-<div class="st">Bloque II — Fundamentos Teóricos (4 puntos)</div>
-${(ex.teoricas||[]).map((q,i)=>`<div class="q">${i+7}. ${q}</div><div class="a">.........................................................................................................................................................................................................<br><br>.........................................................................................................................................................................................................</div>`).join('')}
-</body></html>`;
-        const blob=new Blob(['\ufeff'+html],{type:'application/msword'});
-        const url=URL.createObjectURL(blob);
-        const a=document.createElement('a'); a.href=url;
-        a.download=`Examen_AprendIA_${datosCurriculares.tema.replace(/\s+/g,'_')}.doc`;
-        document.body.appendChild(a); a.click(); document.body.removeChild(a); URL.revokeObjectURL(url);
-        mostrarToast('📝 Examen Word descargando...');
-        cambiarPantalla('screen-diapositivas'); renderizarDiapositivaActual();
-    } catch(err){ mostrarToast('⚠️ '+err.message,'error'); cambiarPantalla('screen-diapositivas'); }
-}
-
-// =========================================================================
-//  GOOGLE FORMS — EXPORTAR Y CORREGIR
-// =========================================================================
-
-function abrirModalForms() {
-    document.getElementById('forms-output-wrap').style.display = 'none';
-    document.getElementById('correccion-output').style.display = 'none';
-    document.getElementById('modal-forms').style.display = 'flex';
-}
-
-function abrirFormsDesdeCarpeeta(tema) {
-    cargarDatosCarpeta(tema);
-    abrirModalForms();
-}
-
-async function generarFormsTexto() {
-    const tipo = document.getElementById('forms-tipo').value;
-    const btn  = document.getElementById('btn-forms-generar');
-    btn.disabled = true;
-    btn.textContent = '⏳ Generando preguntas...';
-    mostrarToast('📋 Generando preguntas con IA...');
-
-    let texto = '';
-    texto += `FORMULARIO DE EVALUACIÓN — ${datosCurriculares.tema.toUpperCase()}
-`;
-    texto += `Nivel: ${datosCurriculares.nivel} · Generado con AprendIA
-`;
-    texto += '═'.repeat(60) + '
-
-';
-    texto += 'INSTRUCCIONES PARA EL ALUMNO:
-';
-    texto += `Nombre completo: ___________________________
-`;
-    texto += `Fecha: _______________
-
-`;
-
-    let numPregunta = 1;
-
-    if (tipo === 'quiz' || tipo === 'ambos') {
-        texto += '── BLOQUE I: QUIZ DE CLASE ──────────────────────────
-
-';
-        listaSubapartadosGlobal.forEach((item) => {
-            const sub    = item.subapartado;
-            const bloque = contenidoDiapositivas[sub];
-            if (!bloque?.quiz?.texto) return;
-            const lineas  = bloque.quiz.texto.split('
-').filter(Boolean);
-            const pregunta = lineas[0] || '';
-            const opciones = lineas.slice(1);
-            texto += `${numPregunta}. ${pregunta}
-`;
-            opciones.forEach(op => { texto += `   ${op}
-`; });
-            texto += '
-';
-            numPregunta++;
-        });
-    }
-
-    if (tipo === 'examen' || tipo === 'ambos') {
-        mostrarToast('⏳ Generando examen con IA...');
-        const prompt = `Diseña un examen formal de 10 preguntas para "${datosCurriculares.nivel}" sobre "${datosCurriculares.tema}".
-BLOQUE 1 (6 prácticas): problemas o análisis propios de la materia, numerados del 1 al 6.
-BLOQUE 2 (4 teóricas): definición de términos, relacionar columnas, completar espacios, opción múltiple con justificación. Numeradas del 7 al 10.
-Devuelve SOLO: {"practicas":["Enunciado completo 1","Enunciado 2","Enunciado 3","Enunciado 4","Enunciado 5","Enunciado 6"],"teoricas":["Enunciado 7","Enunciado 8","Enunciado 9","Enunciado 10"]}`;
-
-        try {
-            const ex = await llamarGemini(prompt);
-            texto += '
-── BLOQUE II: EXAMEN ESCRITO ────────────────────────
-
-';
-            texto += 'PARTE PRÁCTICA (6 puntos)
-
-';
-            (ex.practicas||[]).forEach((q,i) => {
-                texto += `${numPregunta}. ${q}
-
-Respuesta:
-_______________________________________________
-_______________________________________________
-_______________________________________________
-
-`;
-                numPregunta++;
-            });
-            texto += 'PARTE TEÓRICA (4 puntos)
-
-';
-            (ex.teoricas||[]).forEach((q,i) => {
-                texto += `${numPregunta}. ${q}
-
-Respuesta:
-_______________________________________________
-_______________________________________________
-
-`;
-                numPregunta++;
-            });
-        } catch(e) {
-            texto += '
-[Error generando examen: ' + e.message + ']
-';
-        }
-    }
-
-    texto += '
-' + '═'.repeat(60) + '
-';
-    texto += 'Generado con AprendIA · OpenRouter AI
-';
-
-    // Mostrar resultado
-    const outWrap = document.getElementById('forms-output-wrap');
-    const outText = document.getElementById('forms-output-text');
-    outText.innerText = texto;
-    outWrap.style.display = 'block';
-    outWrap._formsTexto   = texto;
-
-    btn.disabled    = false;
-    btn.textContent = '📋 Regenerar';
-
-    // Cambiar botón a "Corregir con IA" si hay URL de Sheet
-    mostrarToast('✅ Preguntas generadas. Cópialas en Google Forms.');
-}
-
-function copiarFormsTexto() {
-    const wrap = document.getElementById('forms-output-wrap');
-    const txt  = wrap._formsTexto || document.getElementById('forms-output-text').innerText;
-    navigator.clipboard.writeText(txt).then(() => mostrarToast('📋 Copiado al portapapeles.'));
-}
-
-function descargarFormsTxt() {
-    const wrap = document.getElementById('forms-output-wrap');
-    const txt  = wrap._formsTexto || document.getElementById('forms-output-text').innerText;
-    const blob = new Blob([txt], { type:'text/plain;charset=utf-8' });
+    const blob = new Blob([texto], { type: 'text/plain;charset=utf-8' });
     const url  = URL.createObjectURL(blob);
     const a    = document.createElement('a');
     a.href     = url;
-    a.download = `Formulario_${datosCurriculares.tema.replace(/\s+/g,'_')}.txt`;
+    a.download = 'Guion_AprendIA_' + datosCurriculares.tema.replace(/\s+/g, '_') + '.txt';
     document.body.appendChild(a); a.click();
     document.body.removeChild(a); URL.revokeObjectURL(url);
-    mostrarToast('⬇ Formulario descargado.');
+    mostrarToast('Guion descargado.');
 }
 
-async function corregirRespuestasSheet() {
-    const url = document.getElementById('forms-sheet-url').value.trim();
-    if (!url) { mostrarToast('Introduce la URL del Google Sheet.','error'); return; }
-
-    mostrarToast('🤖 Intentando leer el Sheet...');
-    // Convertir URL de Sheet a URL de CSV exportable
-    let csvUrl = url;
-    if (url.includes('/edit')) csvUrl = url.replace('/edit#gid=', '/export?format=csv&gid=').replace('/edit', '/export?format=csv');
-    else if (!url.includes('export')) csvUrl = url + '/export?format=csv';
-
-    try {
-        const r = await fetch(csvUrl);
-        if (!r.ok) throw new Error('No se pudo leer el Sheet. Asegúrate de que sea público.');
-        const csvText = await r.text();
-        const lineas  = csvText.trim().split('
-').slice(1); // saltar cabecera
-
-        if (!lineas.length) { mostrarToast('El Sheet está vacío o no tiene respuestas.','error'); return; }
-
-        mostrarToast(`Corrigiendo ${lineas.length} respuesta(s) con IA...`);
-
-        // Clave de respuestas del quiz
-        const claves = listaSubapartadosGlobal.map(item => {
-            const b = contenidoDiapositivas[item.subapartado];
-            return { sub: item.subapartado, clave: b?.quiz?.script || '' };
-        });
-
-        const prompt = `Eres corrector pedagógico. Tienes estas preguntas y claves de respuesta:
-${JSON.stringify(claves.map((c,i) => ({pregunta: i+1, subapartado: c.sub, clave_respuesta: c.clave.substring(0,200)})))}
-
-Tienes estas respuestas de alumnos (en formato CSV, cada fila es un alumno, columnas son: timestamp, nombre, respuesta1, respuesta2...):
-${lineas.slice(0,10).join('
-')}
-
-Para cada alumno devuelve un objeto con:
-- nombre
-- nota_sobre_10
-- comentario_general (1-2 frases motivadoras)
-- correcciones: array con {pregunta, correcto, observacion} para cada respuesta
-
-Devuelve SOLO array JSON con ${Math.min(lineas.length,10)} objetos.`;
-
-        const resultados = await llamarGemini(prompt);
-        mostrarResultadosCorreccion(resultados);
-    } catch(e) {
-        mostrarToast('Error: ' + e.message,'error');
-    }
-}
-
-function mostrarResultadosCorreccion(resultados) {
-    const wrap = document.getElementById('correccion-output');
-    const cont = document.getElementById('correccion-resultados');
-    wrap.style.display = 'block';
-    cont.innerHTML = '';
-
-    if (!Array.isArray(resultados)) {
-        cont.innerHTML = '<p style="color:var(--fog)">No se pudieron procesar los resultados.</p>';
-        return;
-    }
-
-    resultados.forEach(alumno => {
-        const nota    = alumno.nota_sobre_10 || '?';
-        const color   = nota >= 7 ? 'var(--em)' : nota >= 5 ? 'var(--amber)' : 'var(--rs)';
-        const div     = document.createElement('div');
-        div.className = 'corr-item';
-        div.innerHTML = `
-            <div class="corr-hdr">
-                <span class="corr-name">${alumno.nombre || 'Alumno'}</span>
-                <span class="corr-nota" style="color:${color}">${nota}/10</span>
-            </div>
-            <p class="corr-comment">${alumno.comentario_general || ''}</p>
-            ${(alumno.correcciones||[]).map(c => `
-                <div class="corr-preg ${c.correcto ? 'corr-ok' : 'corr-fail'}">
-                    P${c.pregunta}: ${c.observacion||''}
-                </div>`).join('')}`;
-        cont.appendChild(div);
-    });
-
-    // Botón para descargar informe
-    const btnDesc = document.createElement('button');
-    btnDesc.className = 'btn btn-v';
-    btnDesc.style.cssText = 'margin-top:10px;width:100%;font-size:.82rem;padding:10px';
-    btnDesc.textContent = '⬇ Descargar Informe de Corrección';
-    btnDesc.onclick = () => descargarInformeCorreccion(resultados);
-    cont.appendChild(btnDesc);
-
-    mostrarToast('✅ Corrección completada.');
-}
 
 function descargarInformeCorreccion(resultados) {
-    let txt = `INFORME DE CORRECCIÓN — ${datosCurriculares.tema}
-`;
-    txt    += `Generado con AprendIA · ${new Date().toLocaleDateString('es-ES')}
-`;
-    txt    += '═'.repeat(50) + '
-
-';
+    const sep = '='.repeat(50);
+    let txt = 'INFORME DE CORRECCION -- ' + datosCurriculares.tema + '\n';
+    txt += 'Generado con AprendIA - ' + new Date().toLocaleDateString('es-ES') + '\n';
+    txt += sep + '\n\n';
     resultados.forEach((a, i) => {
-        txt += `${i+1}. ${a.nombre || 'Alumno'} — Nota: ${a.nota_sobre_10}/10
-`;
-        txt += `   ${a.comentario_general || ''}
-`;
-        (a.correcciones||[]).forEach(c => {
-            txt += `   P${c.pregunta} [${c.correcto?'✓':'✗'}]: ${c.observacion}
-`;
+        txt += (i+1) + '. ' + (a.nombre || 'Alumno') + ' -- Nota: ' + a.nota_sobre_10 + '/10\n';
+        txt += '   ' + (a.comentario_general || '') + '\n';
+        (a.correcciones || []).forEach(c => {
+            txt += '   P' + c.pregunta + ' [' + (c.correcto ? 'OK' : 'X') + ']: ' + c.observacion + '\n';
         });
-        txt += '
-';
+        txt += '\n';
     });
-    const blob = new Blob([txt], { type:'text/plain;charset=utf-8' });
+    const blob = new Blob([txt], { type: 'text/plain;charset=utf-8' });
     const url  = URL.createObjectURL(blob);
     const a    = document.createElement('a');
-    a.href=url; a.download=`Informe_Correccion_${datosCurriculares.tema.replace(/\s+/g,'_')}.txt`;
+    a.href = url;
+    a.download = 'Informe_Correccion_' + datosCurriculares.tema.replace(/\s+/g, '_') + '.txt';
     document.body.appendChild(a); a.click();
     document.body.removeChild(a); URL.revokeObjectURL(url);
 }
 
-// ── Exponer funciones globales para onsubmit/onclick en HTML ──
-window.handleLogin          = handleLogin;
-window.handleConfig         = handleConfig;
-window.handleGuardarAPIs    = handleGuardarAPIs;
+n
+// == EXPONER FUNCIONES GLOBALES ==
+window.handleLogin = handleLogin;
+window.handleConfig = handleConfig;
+window.handleGuardarAPIs = handleGuardarAPIs;
 window.mostrarPantallaCarpetas = mostrarPantallaCarpetas;
-window.mostrarPantallaAPIs  = mostrarPantallaAPIs;
-window.cambiarPantalla      = cambiarPantalla;
+window.mostrarPantallaAPIs = mostrarPantallaAPIs;
+window.cambiarPantalla = cambiarPantalla;
 window.ejecutarCierreSesion = ejecutarCierreSesion;
-window.instalarPWA          = instalarPWA;
-window.navegarDiapositivas  = navegarDiapositivas;
-window.cambiarTipoDiapo     = cambiarTipoDiapo;
-window.navegarApartado      = navegarApartado;
+window.instalarPWA = instalarPWA;
+window.navegarDiapositivas = navegarDiapositivas;
+window.cambiarTipoDiapo = cambiarTipoDiapo;
+window.navegarApartado = navegarApartado;
 window.guardarApartadosSiguiente = guardarApartadosSiguiente;
-window.agregarApartado      = agregarApartado;
-window.eliminarApartado     = eliminarApartado;
-window.agregarSubapartado   = agregarSubapartado;
-window.eliminarSubapartado  = eliminarSubapartado;
-window.cambiarEstilo        = cambiarEstilo;
-window.ejecutarMagicIA      = ejecutarMagicIA;
+window.agregarApartado = agregarApartado;
+window.eliminarApartado = eliminarApartado;
+window.agregarSubapartado = agregarSubapartado;
+window.eliminarSubapartado = eliminarSubapartado;
+window.cambiarEstilo = cambiarEstilo;
+window.cambiarEstiloBloqueActual = cambiarEstilo;
+window.ejecutarMagicIA = ejecutarMagicIA;
 window.ejecutarBusquedaManualImagenes = ejecutarBusquedaManualImagenes;
 window.actualizarTextoDesdeEditor = actualizarTextoDesdeEditor;
 window.actualizarGuionDesdeEditor = actualizarGuionDesdeEditor;
-window.exportarClaseAPowerPoint   = exportarClaseAPowerPoint;
-window.exportarExamenWord         = exportarExamenWord;
-window.abrirModalVideo    = abrirModalVideo;
-window.abrirModalGuion    = abrirModalGuion;
-window.abrirModalForms    = abrirModalForms;
-window.cerrarModal        = cerrarModal;
-window.seleccionarVoz     = seleccionarVoz;
+window.exportarClaseAPowerPoint = exportarClaseAPowerPoint;
+window.exportarExamenWord = exportarExamenWord;
+window.abrirModalVideo = abrirModalVideo;
+window.abrirModalGuion = abrirModalGuion;
+window.abrirModalForms = abrirModalForms;
+window.cerrarModal = cerrarModal;
+window.seleccionarVoz = seleccionarVoz;
 window.generarVideoNarrado = generarVideoNarrado;
 window.reproducirFragmento = reproducirFragmento;
-window.descargarGuion     = descargarGuion;
-window.generarFormsTexto  = generarFormsTexto;
-window.copiarFormsTexto   = copiarFormsTexto;
-window.descargarFormsTxt  = descargarFormsTxt;
+window.descargarGuion = descargarGuion;
+window.generarFormsTexto = generarFormsTexto;
+window.copiarFormsTexto = copiarFormsTexto;
+window.descargarFormsTxt = descargarFormsTxt;
 window.corregirRespuestasSheet = corregirRespuestasSheet;
-window.guardarEnCarpeta   = guardarEnCarpeta;
-window.subirImagenPropia  = subirImagenPropia;
-window.cambiarFitImagen   = cambiarFitImagen;
-window.cambiarPosImagen   = cambiarPosImagen;
-window.ajustarImagen      = ajustarImagen;
+window.guardarEnCarpeta = guardarEnCarpeta;
+window.guardarTodoEnCarpetaHistorial = guardarEnCarpeta;
+window.subirImagenPropia = subirImagenPropia;
+window.cambiarFitImagen = cambiarFitImagen;
+window.cambiarPosImagen = cambiarPosImagen;
+window.ajustarImagen = ajustarImagen;
 window.cargarAvatarImagen = cargarAvatarImagen;
-window.eliminarCarpeta    = eliminarCarpeta;
+window.eliminarCarpeta = eliminarCarpeta;
 window.verArchivosDeCarpeta = verArchivosDeCarpeta;
 window.cargarWorkspaceDesdeCarpeta = cargarWorkspaceDesdeCarpeta;
-window.descargarPPTXDesdeCarpeta   = descargarPPTXDesdeCarpeta;
+window.descargarPPTXDesdeCarpeta = descargarPPTXDesdeCarpeta;
 window.descargarExamenDesdeCarpeta = descargarExamenDesdeCarpeta;
-window.verGuionDesdeCarpeta        = verGuionDesdeCarpeta;
-window.abrirVideoDesdeCarpeeta     = abrirVideoDesdeCarpeeta;
-window.abrirFormsDesdeCarpeeta     = abrirFormsDesdeCarpeeta;
-window.subirPPTXADrive             = subirPPTXADrive;
-window.handleDragOver  = handleDragOver;
+window.verGuionDesdeCarpeta = verGuionDesdeCarpeta;
+window.abrirVideoDesdeCarpeeta = abrirVideoDesdeCarpeeta;
+window.abrirFormsDesdeCarpeeta = abrirFormsDesdeCarpeeta;
+window.subirPPTXADrive = subirPPTXADrive;
+window.handleDragOver = handleDragOver;
 window.handleDragLeave = handleDragLeave;
-window.handleDrop      = handleDrop;
+window.handleDrop = handleDrop;
 window.agregarArchivos = agregarArchivos;
 window.eliminarArchivo = eliminarArchivo;
