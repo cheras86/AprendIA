@@ -359,31 +359,44 @@ async function llamarGemini(prompt, usarDocs = false) {
     try {
         // Detectar URL real para el Referer (funciona tanto en local como en GitHub Pages)
         const siteUrl = location.origin || 'https://aprendia.app';
-        r = await fetch('https://openrouter.ai/api/v1/chat/completions', {
-            method: 'POST',
-            headers: {
-                'Content-Type': 'application/json',
-                'Authorization': `Bearer ${apiKeys.gemini}`,
-                'HTTP-Referer': siteUrl,
-                'X-Title': 'AprendIA',
-                'Origin': siteUrl
-            },
-            body: JSON.stringify({
-                model: 'openrouter/auto',
-                messages: [
-                    {
-                        role: 'system',
-                        content: 'Eres experto en diseño curricular y educación. Responde SIEMPRE con JSON válido y nada más. Sin explicaciones, sin markdown, sin bloques de código. Solo el JSON puro.'
+        // Fallback automatico por modelos gratuitos -- nunca consumen creditos de pago
+        const FREE_MODELS = [
+            'google/gemini-2.0-flash:free',
+            'meta-llama/llama-3.3-70b-instruct:free',
+            'deepseek/deepseek-r1:free',
+            'qwen/qwen3-8b:free',
+            'mistralai/mistral-7b-instruct:free'
+        ];
+        r = null;
+        for (const tryModel of FREE_MODELS) {
+            try {
+                const rTry = await fetch('https://openrouter.ai/api/v1/chat/completions', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'Authorization': `Bearer ${apiKeys.gemini}`,
+                        'HTTP-Referer': siteUrl,
+                        'X-Title': 'AprendIA',
+                        'Origin': siteUrl
                     },
-                    {
-                        role: 'user',
-                        content: textoFinal
-                    }
-                ],
-                temperature: 0.5,
-                max_tokens: 4096
-            })
-        });
+                    body: JSON.stringify({
+                        model: tryModel,
+                        messages: [
+                            { role: 'system', content: 'Eres experto en diseno curricular y educacion. Responde SIEMPRE con JSON valido y nada mas. Sin explicaciones, sin markdown, sin bloques de codigo. Solo el JSON puro.' },
+                            { role: 'user', content: textoFinal }
+                        ],
+                        temperature: 0.5,
+                        max_tokens: 4096
+                    })
+                });
+                if (rTry.status === 404 || rTry.status === 503) { console.warn('[AI] No disponible:', tryModel); continue; }
+                if (rTry.status === 402) { console.warn('[AI] Sin creditos:', tryModel); continue; }
+                r = rTry;
+                console.log('[AI] Modelo activo:', tryModel);
+                break;
+            } catch(e) { console.warn('[AI] Error:', tryModel, e.message); continue; }
+        }
+        if (!r) throw new Error('Todos los modelos gratuitos fallaron. Crea una nueva API key en openrouter.ai/keys');
     } catch (netErr) {
         throw new Error("Error de red. Comprueba tu conexión a internet.");
     }
@@ -446,7 +459,7 @@ async function testearAPIKey(key) {
                 'Origin': siteUrl2
             },
             body: JSON.stringify({
-                model: 'openrouter/auto',
+                model: 'meta-llama/llama-3.3-70b-instruct:free',
                 messages: [{ role: 'user', content: 'Di: {"ok":true}' }],
                 max_tokens: 20
             })
