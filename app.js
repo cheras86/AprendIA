@@ -590,7 +590,13 @@ function aplicarEstiloImagen() {
 }
 
 async function buscarImagenes(keywords, cantidad=5) {
-    const q = encodeURIComponent(keywords);
+    // Limpiar keywords: quitar palabras genéricas que dan imágenes irrelevantes
+    const PALABRAS_GENERICAS = ['education','classroom','students','teacher','learning','school','study','generic'];
+    const kwLimpio = keywords.split(' ')
+        .filter(w => !PALABRAS_GENERICAS.includes(w.toLowerCase()))
+        .join(' ') || keywords;
+    const q = encodeURIComponent(kwLimpio);
+    console.log('[Imágenes] Buscando:', kwLimpio);
     if (apiKeys.unsplash) {
         try {
             const r = await fetch(`https://api.unsplash.com/search/photos?query=${q}&per_page=${cantidad}&orientation=landscape`,
@@ -807,10 +813,18 @@ async function handleConfig(e) {
     };
     mostrarCargando(`Planificando estructura para: ${datosCurriculares.tema}...`);
     const docsCtx = buildDocsContext();
-    const prompt  = `Actúa como planificador curricular. Diseña los bloques de contenido para una sesión de nivel "${datosCurriculares.nivel}" sobre "${datosCurriculares.tema}". Duración: "${datosCurriculares.duracion}".
-Regla de bloques: 30min-1h → máx 3 | 2h → 4-5 | 3-5h → 6-8.
-${docsCtx ? 'Usa los documentos adjuntos como referencia de contenido.' : ''}
-Devuelve SOLO un array JSON de strings. Ejemplo: ["Introducción","Desarrollo","Cierre"]`;
+    const prompt  = `Eres un experto en diseño curricular especializado en "${datosCurriculares.tema}".
+Diseña los bloques temáticos ESPECÍFICOS de una sesión sobre "${datosCurriculares.tema}" para nivel ${datosCurriculares.nivel}, duración ${datosCurriculares.duracion}, enfoque ${datosCurriculares.estilo}.
+
+IMPORTANTE: Los bloques deben ser ESPECÍFICOS de la materia "${datosCurriculares.tema}", NO genéricos.
+- MAL: ["Introducción","Desarrollo","Conclusión"]
+- BIEN para Espectroscopía IR: ["Fundamentos de la radiación infrarroja","Grupos funcionales y sus frecuencias de absorción","Interpretación de espectros IR","Aplicaciones analíticas"]
+- BIEN para Revolución Industrial: ["Contexto previo: Europa pre-industrial","Innovaciones tecnológicas clave","Transformaciones sociales y laborales","Impacto económico global"]
+
+Reglas de cantidad: 30min-1h → 3 bloques | 2h → 4-5 bloques | 3h+ → 6-8 bloques.
+${docsCtx ? 'Usa los documentos adjuntos como fuente principal para los bloques.' : ''}
+
+Devuelve SOLO un array JSON de strings con los nombres exactos de los bloques temáticos.`;
     try {
         const res = await llamarGemini(prompt, documentosReferencia.length > 0);
         if (!Array.isArray(res)) throw new Error("Formato inesperado");
@@ -856,8 +870,19 @@ async function guardarApartadosSiguiente() {
 async function cargarSubapartados() {
     const padre = apartadosOrdenados[indiceApartadoActual];
     mostrarCargando(`Desglosando subtemas de: "${padre}"...`);
-    const prompt=`Para nivel "${datosCurriculares.nivel}" y duración "${datosCurriculares.duracion}", extrae los subconceptos clave del bloque "${padre}" (tema: "${datosCurriculares.tema}").
-Devuelve SOLO un array JSON de strings, máximo 5.`;
+    const prompt = `Eres experto en "${datosCurriculares.tema}" nivel ${datosCurriculares.nivel}.
+Para el bloque "${padre}" de la unidad "${datosCurriculares.tema}", genera los subapartados siguiendo SIEMPRE esta estructura pedagógica obligatoria:
+
+1. [Descripción exhaustiva del concepto central de "${padre}"]
+2. [Fundamentos teóricos y principios clave de "${padre}"]  
+3. [Ejemplos prácticos y casos reales de "${padre}"]
+4. [Ejercicio de clase elaborado sobre "${padre}"]
+
+IMPORTANTE: Los nombres deben ser ESPECÍFICOS de "${padre}" dentro de "${datosCurriculares.tema}", no genéricos.
+- MAL: ["Introducción","Teoría","Práctica","Ejercicio"]
+- BIEN para "Grupos funcionales IR": ["Identificación de bandas características por grupo funcional","Correlación entre estructura molecular y frecuencia de absorción","Análisis comparativo de espectros IR de alcoholes, cetonas y ácidos","Ejercicio: Identificación de compuesto desconocido por su espectro IR"]
+
+Devuelve SOLO array JSON de 4 strings exactos.`;
     try {
         const res=await llamarGemini(prompt, documentosReferencia.length>0);
         estructuraCompleta[padre]=Array.isArray(res)?res:["Marco Teórico"];
@@ -886,12 +911,25 @@ function agregarSubapartado() {
 }
 function eliminarSubapartado(i){ estructuraCompleta[apartadosOrdenados[indiceApartadoActual]].splice(i,1); renderizarSubapartados(); }
 async function navegarApartado(dir) {
-    const ins=document.querySelectorAll('#lista-subapartados .drag-input');
-    estructuraCompleta[apartadosOrdenados[indiceApartadoActual]]=Array.from(ins).map(x=>x.value.trim());
-    indiceApartadoActual+=dir;
-    if(indiceApartadoActual<0)                              cambiarPantalla('screen-apartados');
-    else if(indiceApartadoActual<apartadosOrdenados.length) await cargarSubapartados();
-    else                                                    await generarTodoElContenido();
+    // Guardar los subapartados editados ANTES de navegar
+    const ins = document.querySelectorAll('#lista-subapartados .drag-input');
+    const editados = Array.from(ins).map(x => x.value.trim()).filter(Boolean);
+    if (editados.length) {
+        estructuraCompleta[apartadosOrdenados[indiceApartadoActual]] = editados;
+    }
+    indiceApartadoActual += dir;
+    if (indiceApartadoActual < 0) {
+        cambiarPantalla('screen-apartados');
+    } else if (indiceApartadoActual < apartadosOrdenados.length) {
+        // Si ya tenemos subapartados para este módulo (editados antes), mostrarlos directamente
+        if (estructuraCompleta[apartadosOrdenados[indiceApartadoActual]]?.length) {
+            renderizarSubapartados();
+        } else {
+            await cargarSubapartados();
+        }
+    } else {
+        await generarTodoElContenido();
+    }
 }
 
 // =========================================================================
@@ -909,22 +947,44 @@ async function generarTodoElContenido() {
         const lote=listaSubapartadosGlobal.slice(i,i+LOTE);
         mostrarCargando(`Generando material ${i+1}-${Math.min(i+LOTE,listaSubapartadosGlobal.length)} de ${listaSubapartadosGlobal.length}...`);
         const tieneReferencias = documentosReferencia.length>0;
-        const prompt=`Tema: "${datosCurriculares.tema}" (${datosCurriculares.nivel}). Estilo: "${datosCurriculares.estilo}".
-${tieneReferencias?'Usa los DOCUMENTOS DE REFERENCIA adjuntos para enriquecer el contenido.':''}
-Genera material didactico COMPLETO y DETALLADO para estos subapartados: ${JSON.stringify(lote.map(x=>x.subapartado))}
+        // Instrucciones de estilo según enfoque pedagógico seleccionado
+        const estiloInstr = {
+            'muy visual e ilustrativo': 'Usa metáforas visuales, analogías con imágenes cotidianas, descripciones que el alumno pueda "ver" mentalmente. Cada punto debe tener una imagen mental clara.',
+            'académico y formal': 'Usa terminología técnica precisa, cita principios y leyes por su nombre, estructura el contenido de forma rigurosa y científica.',
+            'dinámico y gamificado': 'Usa retos, puntuaciones, misiones y recompensas. Reformula cada concepto como un nivel o desafío. Añade "¡Bonus!" y "¡Logro desbloqueado!" donde sea pertinente.',
+            'esquemático y sintético': 'Usa frases muy cortas y directas. Máximo 8-10 palabras por viñeta. Sin explicaciones largas. Solo lo esencial y medular.'
+        }[datosCurriculares.estilo] || 'Adapta el contenido al nivel del alumno.';
 
-REGLAS OBLIGATORIAS:
-1. "keywords_imagen": 4 palabras en ingles MUY ESPECIFICAS del subapartado (no genericas). Si el subapartado es quimico, usa terminos quimicos. Si es historico, usa terminos historicos. Ejemplo: "electrochemical reduction cathode electrode" en vez de "education classroom"
-2. Cada campo "texto" debe ser RICO Y COMPLETO: frase introductoria de 2-3 lineas + salto + minimo 5 viñetas con explicacion de 1-2 lineas cada una
-3. Formato de texto: "Frase introductoria que contextualice el concepto en 2-3 lineas.\n\n• Punto 1: explicacion desarrollada de una o dos lineas\n• Punto 2: explicacion con ejemplo concreto\n• Punto 3: relacion con otros conceptos\n• Punto 4: aplicacion practica\n• Punto 5: dato clave o formula si aplica"
+        const prompt = `Eres experto en "${datosCurriculares.tema}" para nivel ${datosCurriculares.nivel}.
+ENFOQUE PEDAGÓGICO OBLIGATORIO: ${estiloInstr}
+${tieneReferencias ? 'Usa los DOCUMENTOS DE REFERENCIA para enriquecer con contenido específico del docente.' : ''}
+
+Genera material didáctico para estos subapartados ESPECÍFICOS de "${datosCurriculares.tema}": ${JSON.stringify(lote.map(x => x.subapartado))}
+
+REGLAS CRÍTICAS:
+1. keywords_imagen: 5 palabras en inglés MUY ESPECÍFICAS que describan una imagen real del concepto.
+   - Para "Espectroscopía IR" → "infrared spectrum absorption peaks laboratory"
+   - Para "Fotosíntesis" → "chlorophyll leaf cross section chloroplast"
+   - Para "Revolución Industrial" → "steam engine factory Victorian workers"
+   - NUNCA uses: "education classroom students teacher learning"
+
+2. El campo "texto" de resumen debe:
+   - Frase introductoria específica de "${datosCurriculares.tema}" (2-3 líneas)
+   - Mínimo 5 viñetas con explicación de 1-2 líneas, ESPECÍFICAS del subapartado
+   - Aplicar el enfoque: ${datosCurriculares.estilo}
+
+3. El campo "ejemplo" debe contener un caso práctico REAL y CONCRETO del subapartado en contexto profesional o cotidiano.
+
+4. El "quiz" debe evaluar comprensión profunda, no memorización superficial.
 
 Por cada subapartado devuelve:
-- "keywords_imagen": 4 palabras en ingles especificas del tema
-- "resumen": { "texto": "[intro 2-3 lineas]\n\n• Concepto: explicacion\n• Base teorica: explicacion\n• Aplicacion: explicacion\n• Relacion: explicacion\n• Punto clave: explicacion", "script": "Guion docente detallado (5-7 frases explicando al alumno)", "estimacion_minutos": N }
-- "ejemplo": { "texto": "[descripcion caso real 2-3 lineas]\n\n• Contexto: descripcion\n• Paso 1: descripcion\n• Paso 2: descripcion\n• Resultado: descripcion", "script": "Como explicar el ejemplo", "estimacion_minutos": N }
-- "quiz": { "texto": "Pregunta evaluativa precisa?\nA) opcion\nB) opcion\nC) opcion\nD) opcion", "script": "Respuesta correcta: X. Justificacion completa." }
+- "keywords_imagen": string con 5 palabras inglesas específicas
+- "resumen": { "texto": "intro específica\\n\\n• Punto específico 1: detalle\\n• Punto específico 2: detalle\\n• Punto específico 3: detalle\\n• Punto específico 4: detalle\\n• Punto específico 5: detalle", "script": "Guion docente: cómo explicar esto en clase (5-7 frases)", "estimacion_minutos": N }
+- "ejemplo": { "texto": "Caso real concreto\\n\\n• Contexto profesional: detalle\\n• Procedimiento: detalle\\n• Resultado observable: detalle\\n• Aplicación en ${datosCurriculares.tema}: detalle", "script": "Cómo presentar el ejemplo", "estimacion_minutos": N }
+- "quiz": { "texto": "Pregunta que requiera comprensión real?\\nA) opción\\nB) opción\\nC) opción\\nD) opción", "script": "Respuesta: X. Justificación pedagógica detallada." }
 
 Devuelve SOLO array JSON con ${lote.length} objetos.`;
+
 
         let material=[];
         try{ material=await llamarGemini(prompt,tieneReferencias); if(!Array.isArray(material)) material=[material]; }
